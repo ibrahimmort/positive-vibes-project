@@ -1,0 +1,40 @@
+# fly.toml app configuration file for positive-vibes-backend
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'positive-vibes-backend' # Make sure this matches your Fly app name
+primary_region = 'iad'
+
+# Add the builder line to tell Fly how to build the Node.js app
+[build]
+  builder = "paketobuildpacks/builder-full"
+
+[http_service]
+  # Fly.io commonly uses 8080 internally for Node apps.
+  # Your server.js listens on process.env.PORT || 3000,
+  # Fly sets PORT env var, often to 8080. This makes them match.
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true # Changed from 'stop' to boolean true (common)
+  auto_start_machines = true
+  min_machines_running = 0 # Set to 1 if you want it always running (might incur costs)
+  processes = ['app']
+
+# You can usually remove the [[vm]] section unless you need specific sizing
+# Fly will default to shared-cpu-1x 256MB RAM which is often enough for the free tier.
+# Keep it if you specifically need 1GB memory as configured before.
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+# Optional: Add health checks if needed later
+# [checks]
+#   [checks.alive]
+#     type = "tcp"
+#     interval = "15s"
+#     timeout = "2s"
+#     grace_period = "5s"
+#     port = 8080 # Check the internal port
+
