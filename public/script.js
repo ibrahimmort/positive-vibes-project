@@ -183,19 +183,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const weeklyThemeElement = document.getElementById('weekly-theme');
             const suggestionsListElement = document.getElementById('suggestions-list');
             if (!weeklyThemeElement || !suggestionsListElement) { console.error("[UI UPDATE] Theme/suggestion elements not found for UI update."); return; }
-            if (themeData.suggestions && themeData.suggestions.length > 0) {
-                 // Clear previous suggestions
-                 suggestionsListElement.innerHTML = '';
-                 // Loop through ALL suggestions directly
-                 themeData.suggestions.forEach(suggestion => { // Correct loop
-                     const li = document.createElement('li');
-                     li.textContent = suggestion;
-                     suggestionsListElement.appendChild(li);
-                 });
-            } else {
-                 // Handle case with no suggestions
-                 suggestionsListElement.innerHTML = '<li>No specific suggestions this week. Focus on the theme!</li>';
-            }
+            if (themeData && themeData.theme) {
+                weeklyThemeElement.textContent = themeData.theme;
+                suggestionsListElement.innerHTML = '';
+                if (themeData.suggestions && themeData.suggestions.length > 0) { const shuffled = [...themeData.suggestions].sort(() => 0.5 - Math.random()); shuffled.slice.forEach(suggestion => { const li = document.createElement('li'); li.textContent = suggestion; suggestionsListElement.appendChild(li); }); }
+                else { suggestionsListElement.innerHTML = '<li>No specific suggestions this week. Focus on the theme!</li>'; }
+                console.log("[UI UPDATE] Theme UI updated successfully.");
+            } else { weeklyThemeElement.textContent = 'Theme Unavailable'; suggestionsListElement.innerHTML = `<li>Could not load suggestions.</li>`; console.log("[UI UPDATE] Theme UI set to unavailable/error state."); }
+        }
     /** Updates the stats counters */
     function updateStatsUI(statsData) {
             console.log("[UI UPDATE] Updating stats UI. Data:", statsData);
