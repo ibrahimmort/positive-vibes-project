@@ -1,0 +1,614 @@
+/* General Body Styles */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f8ff; /* Light blue background */
+    color: #333; /* Dark grey text */
+    line-height: 1.6;
+}
+
+/* Main container for the top section (map + interaction) */
+.top-container {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    background-color: #fff; /* White background */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Subtle shadow */
+    border-radius: 8px; /* Rounded corners */
+    overflow: hidden; /* Ensure content stays within rounded corners */
+    width: 90%;
+    max-width: 1200px; /* Max width for larger screens */
+    margin: 30px auto 15px auto; /* Center with margin */
+}
+
+/* Sections within the top container */
+.map-section {
+    padding: 30px;
+    flex: 1; /* Take up available space */
+    min-width: 300px; /* Minimum width before wrapping */
+    box-sizing: border-box;
+    background-color: #e0f0ff; /* Lighter blue for map area */
+    border-right: 1px solid #ccc; /* Separator line */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.interactive-section {
+    padding: 30px;
+    flex: 1; /* Take up available space */
+    min-width: 300px; /* Minimum width before wrapping */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Map Section Specifics */
+.map-section h2 {
+    color: #0056b3; /* Darker blue heading */
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+/* Style for the Leaflet map container */
+#map {
+    width: 90%; /* Or 100% if you prefer */
+    height: 350px; /* REQUIRED: Set a height for the map */
+    background-color: #b0d0f0; /* Placeholder background */
+    border: 1px solid #888;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    z-index: 0; /* Ensure map is behind popups if any */
+}
+.counters p {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin: 5px 0;
+    color: #333;
+}
+
+
+/* Interactive Section Specifics */
+.interactive-section h1 {
+    color: #0056b3;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+.theme-section, .suggestions-section {
+    margin-bottom: 20px;
+    background-color: #f8f9fa; /* Very light grey background */
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #eee; /* Light border */
+}
+.theme-section h2, .suggestions-section h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #0056b3;
+}
+#weekly-theme {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #007bff; /* Standard blue */
+}
+#suggestions-list {
+    list-style: disc;
+    padding-left: 20px;
+    margin: 0;
+}
+#suggestions-list li {
+    margin-bottom: 5px;
+}
+
+/* Vibe Button Area */
+.action-button-area {
+    text-align: center;
+    margin-top: auto; /* Push button area to the bottom */
+    padding-top: 20px; /* Add space above button */
+}
+.button-instruction {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+/* Base styles shared by both vibe button states */
+#vibe-button {
+    display: block;
+    padding: 0; /* Reset padding */
+    font-weight: bold;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease, font-size 0.3s ease, padding 0.3s ease; /* Smooth transitions */
+    margin: 10px auto; /* Center horizontally */
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Add slight shadow */
+    overflow: hidden; /* Hide text overflow during transition */
+}
+
+/* Styles for the ACTIVE ('P') state */
+#vibe-button.vibe-button-active {
+    width: 80px;
+    height: 80px;
+    font-size: 2.5em;
+    background-color: #28a745; /* Green */
+    border-radius: 50%; /* Circle */
+    line-height: 80px; /* Vertically center 'P' */
+}
+#vibe-button.vibe-button-active:hover:not(:disabled) {
+    background-color: #218838; /* Darker green on hover */
+}
+
+/* Styles for the COUNTDOWN state */
+#vibe-button.vibe-button-countdown {
+    width: 160px; /* Wider for text */
+    height: 50px;  /* Shorter height */
+    padding: 5px 10px; /* Add some padding */
+    font-size: 1.1em; /* Smaller font for timer */
+    background-color: #6c757d; /* Grey when disabled/countdown */
+    border-radius: 25px; /* Oval shape */
+    line-height: normal; /* Normal line height for timer text */
+    cursor: not-allowed;
+    box-shadow: none; /* Remove shadow in countdown state */
+}
+
+/* General disabled state for vibe button */
+#vibe-button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Confirmation Message Styling */
+#confirmation-message {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    min-height: 1.2em; /* Prevent layout shift */
+    padding: 5px;
+    border-radius: 4px;
+}
+#confirmation-message.success {
+    color: #155724; /* Dark green text */
+    background-color: #d4edda; /* Light green background */
+    border: 1px solid #c3e6cb;
+}
+#confirmation-message.error {
+     color: #721c24; /* Dark red text */
+     background-color: #f8d7da; /* Light red background */
+     border: 1px solid #f5c6cb;
+}
+
+
+/* User Status Area */
+#user-status {
+    padding: 10px 15px;
+    margin: 10px 0 20px 0;
+    background-color: #e0f0ff;
+    border: 1px solid #b0d0f0;
+    border-radius: 5px;
+    text-align: center;
+    display: flex; /* Use flexbox for alignment */
+    flex-wrap: wrap; /* Allow wrapping */
+    justify-content: center; /* Center items */
+    align-items: center; /* Align items vertically */
+    gap: 10px; /* Space between items */
+}
+#user-status p {
+    margin: 0; /* Remove default margin */
+    font-weight: bold;
+    flex-shrink: 0; /* Prevent text from shrinking too much */
+}
+#logout-button {
+    padding: 5px 10px;
+    font-size: 0.9em;
+    color: #fff;
+    background-color: #dc3545; /* Red */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+#logout-button:hover {
+    background-color: #c82333; /* Darker red */
+}
+
+
+/* Content Below Top Container */
+main.content-below {
+    width: 100%;
+    padding: 0 5%; /* Add horizontal padding */
+    box-sizing: border-box;
+    margin-top: 0;
+}
+.full-width-section {
+    display: block;
+    width: 100%;
+    max-width: 1100px; /* Consistent max width */
+    margin: 30px auto; /* Center sections */
+    padding: 25px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    border-radius: 8px;
+    box-sizing: border-box;
+    overflow: hidden; /* Contain content */
+}
+.full-width-section h3 {
+    margin-top: 0;
+    color: #0056b3;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Account Login/Signup/Reset Area */
+.account-section-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px 20px; /* Padding around the form */
+    min-height: 80vh; /* Ensure it takes up significant height */
+}
+.account-section {
+    max-width: 500px; /* Limit width of the form container */
+    width: 100%;
+    margin: 0;
+    padding: 30px; /* Padding inside the card */
+}
+.form-container {
+    width: 100%;
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    box-sizing: border-box;
+}
+.form-container h2 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #0056b3;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="text"] { /* Added text type */
+    width: 100%;
+    padding: 10px; /* Increased padding */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+/* Style for form input hints */
+.form-hint {
+    display: block;
+    font-size: 0.8em;
+    color: #6c757d; /* Grey color */
+    margin-top: 4px;
+}
+/* General form submit button styling */
+.form-container button[type="submit"] {
+    display: block;
+    width: 100%;
+    padding: 12px; /* Larger button */
+    font-size: 1em;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007bff; /* Blue */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+.form-container button[type="submit"]:hover {
+    background-color: #0056b3; /* Darker blue */
+}
+.form-container button[type="submit"]:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+/* Message styling (for login, signup, reset, contact) */
+.message {
+    margin-top: 15px;
+    font-size: 0.9em;
+    text-align: center;
+    font-weight: bold;
+    min-height: 1.2em;
+    padding: 8px;
+    border-radius: 4px;
+}
+.message.success {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+.message.error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+/* Links to toggle forms or go back */
+.toggle-link-p {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+.link-button,
+.toggle-link-p a { /* Apply to both button-styled links and regular links */
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+    font-family: inherit;
+}
+.link-button:hover,
+.toggle-link-p a:hover {
+    color: #0056b3;
+}
+
+/* Container for the submit link on reset page */
+.form-submit-link-container {
+    text-align: center; /* Center the link */
+    margin-top: 15px; /* Space above the link */
+}
+
+/* Style for the <a> tag to look like a button (used on reset page) */
+.button-link {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1em;
+    font-weight: bold;
+    color: #fff !important;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background-color 0.3s ease;
+    min-width: 100px;
+}
+.button-link:hover {
+    background-color: #0056b3;
+    color: #fff !important;
+    text-decoration: none;
+}
+.button-link.disabled {
+    background-color: #6c757d;
+    color: #ccc !important;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+
+/* Gamification Section */
+.gamification-section { text-align: center; }
+.gamification-section .gamification-content {
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    display: inline-block; /* Keep content centered */
+    text-align: left;
+    width: auto; /* Adjust width as needed */
+    max-width: 90%;
+}
+.gamification-section p { margin: 5px 0; color: #555; }
+
+/* Badges Area */
+#badges-display-area {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
+}
+#badges-display-area h4,
+#progress-area h4 {
+    margin-bottom: 8px;
+    color: #0056b3;
+    font-size: 1em;
+}
+#badges-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* Spacing between badges */
+    min-height: 25px; /* Ensure space even if empty */
+}
+.badge-item {
+    background-color: #007bff; /* Badge background color */
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px; /* Pill shape */
+    font-size: 0.85em;
+    font-weight: bold;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+    white-space: nowrap; /* Prevent wrapping */
+}
+.no-badges {
+    font-style: italic;
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+/* Progress Bar Area */
+#progress-area {
+     margin-top: 15px;
+     padding-top: 15px;
+     border-top: 1px dashed #ccc;
+}
+.progress-bar-container {
+    width: 100%;
+    background-color: #e9ecef; /* Light grey background */
+    border-radius: 8px;
+    overflow: hidden; /* Ensure inner bar stays within bounds */
+    height: 16px; /* Height of the progress bar */
+    margin-bottom: 5px;
+    border: 1px solid #ced4da;
+}
+.progress-bar-inner {
+    height: 100%;
+    background-color: #28a745; /* Green progress color */
+    border-radius: 8px 0 0 8px; /* Round left corners */
+    transition: width 0.5s ease-in-out; /* Smooth transition on width change */
+    text-align: center; /* Center text if needed inside */
+    color: white;
+    line-height: 16px; /* Match height */
+    font-size: 0.8em;
+}
+.progress-bar-inner[style*="width: 100%"] { /* Round right corner when full */
+    border-radius: 8px;
+}
+.next-badge-text {
+    font-size: 0.9em;
+    color: #555;
+    display: block; /* Ensure it takes its own line */
+}
+
+/* Podcast Link Section */
+.podcast-link-section { text-align: center; padding: 20px; }
+.podcast-link-section a { color: #0056b3; text-decoration: none; font-weight: bold; font-size: 1.2em; }
+.podcast-link-section a:hover { text-decoration: underline; }
+
+/* Video Section */
+/* Center the content within the video section */
+.video-section {
+    text-align: center; /* Center inline or inline-block children */
+}
+/* Container for the video and text side-by-side */
+.video-text-container {
+    display: inline-flex; /* Treat as inline-block to allow centering */
+    flex-wrap: wrap;      /* Allow wrapping on smaller screens */
+    gap: 25px;            /* Space between video and text columns */
+    margin-bottom: 25px;  /* Space below the video/text block */
+    text-align: left;     /* Reset text alignment for content inside */
+    max-width: 100%;      /* Prevent overflow */
+    vertical-align: top;  /* Align columns to the top */
+}
+/* Column for the video */
+.video-column {
+    flex: 1 1 500px; /* Allow growing, suggest 500px base, allow shrinking */
+    min-width: 280px; /* Minimum width before wrapping */
+    max-width: 600px; /* Optional: Max width for the video */
+}
+/* Column for the text */
+.text-column {
+    flex: 1 1 300px; /* Allow growing, suggest 300px base, allow shrinking */
+    min-width: 250px;
+    padding-top: 10px; /* Add some padding for alignment */
+}
+.text-column h4 {
+    margin-top: 0; /* Remove default heading margin */
+    color: #0056b3;
+}
+.text-column p {
+    margin-bottom: 1em;
+    line-height: 1.5;
+    color: #333;
+}
+/* Wrapper for the video iframe to maintain aspect ratio */
+.video-wrapper {
+    position: relative; /* Needed for absolute positioning of iframe */
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+    height: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background-color: #eee; /* Background while loading */
+}
+/* Style the iframe itself */
+.video-wrapper iframe {
+    position: absolute; /* Position absolutely within the wrapper */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none; /* Remove default iframe border */
+}
+/* Container for the link/button */
+.youtube-link-container {
+    display: block; /* Take full width for centering */
+    text-align: center; /* Center the link inside */
+    margin-top: 20px; /* Space above the link */
+    width: 100%;
+}
+/* Ensure button-link style is applied (should already exist) */
+.button-link.youtube-button {
+    /* You can add specific overrides here if needed */
+    /* Example: background-color: #c4302b; /* YouTube Red */
+}
+
+
+/* Contact Section */
+.contact-section p { font-size: 0.9em; color: #555; text-align: center; margin-bottom: 15px;}
+#contact-form textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: sans-serif; font-size: 1em; }
+#contact-submit-button { display: block; width: 100%; padding: 10px; font-size: 1em; font-weight: bold; color: #fff; background-color: #007bff; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; }
+#contact-submit-button:hover { background-color: #0056b3; }
+
+/* Utility Class */
+.hidden { display: none !important; }
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .top-container {
+        flex-direction: column; /* Stack sections vertically */
+        width: 95%;
+        margin: 15px auto;
+    }
+    .map-section{
+        border-right: none; /* Remove border when stacked */
+        border-bottom: 1px solid #ccc; /* Add bottom border */
+    }
+    main.content-below {
+        padding: 0 2.5%; /* Reduce padding */
+    }
+    .full-width-section {
+        padding: 15px; /* Reduce padding */
+        margin: 20px auto; /* Adjust margin */
+    }
+    .account-section-wrapper {
+        padding: 20px 10px; /* Reduce padding */
+        min-height: auto; /* Allow height to adjust */
+    }
+    .account-section {
+        padding: 20px; /* Reduce padding */
+    }
+    /* Adjust video layout for smaller screens */
+    .video-text-container {
+        flex-direction: column; /* Stack columns */
+        display: block; /* Change from inline-flex */
+    }
+    .video-column, .text-column {
+        flex-basis: auto; /* Reset flex basis */
+        max-width: 500px; /* Limit width when stacked */
+        margin-left: auto; /* Center columns when stacked */
+        margin-right: auto;
+    }
+    .text-column {
+        padding-top: 20px; /* Add space above text when stacked */
+    }
+    /* Make vibe button slightly smaller on mobile */
+    #vibe-button.vibe-button-active {
+        width: 70px;
+        height: 70px;
+        font-size: 2.2em;
+        line-height: 70px;
+    }
+     /* Make countdown button slightly smaller on mobile */
+    #vibe-button.vibe-button-countdown {
+        width: 140px;
+        height: 45px;
+        font-size: 1em;
+    }
+}

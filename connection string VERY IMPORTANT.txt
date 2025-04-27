@@ -1,0 +1,1 @@
+mongodb+srv://freeegdb:g2gP@ssw0rd@clusterday01.2z4fbtw.mongodb.net/?retryWrites=true&w=majority&appName=ClusterDay01

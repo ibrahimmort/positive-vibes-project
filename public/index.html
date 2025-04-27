@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positive Vibes Project</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="stylesheet" href="style.css">
+	<link rel="icon" href="/favicon.ico" type="image/x-icon">
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+</head>
+<body>
+    <div id="main-app-content" class="hidden">
+        <div class="container top-container">
+            <div class="map-section">
+                <h2>Our Collective Impact</h2>
+                <div id="map"></div>
+                <div class="counters">
+                    <p>Vibes This Week: <span id="weekly-counter">0</span></p>
+                    <p>Total Vibes Ever: <span id="total-counter">0</span></p>
+                </div>
+            </div>
+            <div class="interactive-section">
+                <h1>Positive Vibes Project</h1>
+                <div id="user-status" class="hidden">
+                    <p>Welcome! <span id="user-email-display"></span></p>
+                    <button id="logout-button">Logout</button>
+                </div>
+                <div class="theme-section">
+                    <h2>This Week's Theme:</h2>
+                    <p id="weekly-theme">Loading...</p>
+                </div>
+                <div class="suggestions-section">
+                    <h3>Try one of these simple actions:</h3>
+                    <ul id="suggestions-list"></ul>
+                </div>
+                <div class="action-button-area">
+                    <p class="button-instruction">
+                        Make sure to spread some Positive Vibes around first<br>then when ready... Push that P!
+                    </p>
+                    <button id="vibe-button">P</button>
+                    <p id="confirmation-message" class="message hidden"></p>
+                </div>
+            </div>
+        </div>
+        <main class="content-below">
+            <section class="full-width-section gamification-section">
+                 <h3>Your Progress</h3>
+                <div class="gamification-content">
+                    <p>My Weekly Streak: <span id="streak-counter">0</span> Weeks</p>
+                    <div id="badges-display-area">
+                        <h4>Badges Earned:</h4>
+                        <div id="badges-list">
+                            <span class="no-badges">Keep spreading vibes to earn badges!</span>
+                        </div>
+                    </div>
+                    <div id="progress-area" style="margin-top: 15px;">
+                         <h4>Next Badge Progress:</h4>
+                         <div class="progress-bar-container" title="Progress Bar">
+                             <div id="progress-bar-inner" class="progress-bar-inner" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                         </div>
+                         <span id="next-badge-text" class="next-badge-text">Loading...</span>
+                    </div>
+                </div>
+            </section>
+            <section class="full-width-section podcast-link-section">
+                <a href="#" id="podcast-link-placeholder">Listen to This Week's Inspiration! (Podcast Link)</a>
+            </section>
+
+            <section class="full-width-section video-section">
+                <h3>Wholesome Moments</h3>
+                <div class="video-text-container">
+                    <div class="video-column">
+                        <div class="video-wrapper">
+                            <iframe
+                                src="https://www.youtube.com/embed/QSbIAJRP_So" /* Your specific video URL */
+                                title="Featured YouTube video player"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerpolicy="strict-origin-when-cross-origin"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                    </div>
+                    <div class="text-column">
+                        <h4>Ready for your weekly recharge? 😊</h4>
+                        <p>Welcome to the Positive Vibes Moments, presented by the Positive Vibes Podcast! Each week, we curate a collection of feel-good clips, inspiring stories, and moments of kindness designed to brighten your day and lift your spirits.</p>
+                        <p>If you love positive content and need a reason to smile, you're in the right place! Sit back, relax, and enjoy this boost of positivity.</p>
+                    </div>
+                </div>
+                <div class="youtube-link-container">
+                    <a href="https://www.youtube.com/@freeegvo" /* Your specific channel/playlist URL */
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="button-link youtube-button"> See More Wholesome Videos!
+                    </a>
+                </div>
+            </section>
+
+            <section class="full-width-section contact-section">
+                 <h3>Share Your Story or Suggestion!</h3>
+                <p>Share a story, suggest a theme, or send feedback for the podcast!</p>
+                <form id="contact-form">
+                    <textarea id="contact-message" name="message" rows="4" placeholder="Type your message here..." required></textarea>
+                    <button type="submit" id="contact-submit-button">Send Message</button>
+                    <p id="contact-form-message" class="message hidden"></p>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <div id="account-area" class="account-section-wrapper">
+        <section class="full-width-section account-section">
+            <div id="login-form-container" class="form-container">
+                 <h2>Login - Positive Vibes Project</h2>
+                <form id="login-form">
+                    <div class="form-group"> <label for="login-email">Email:</label> <input type="email" id="login-email" name="email" required> </div>
+                    <div class="form-group"> <label for="login-password">Password:</label> <input type="password" id="login-password" name="password" required> </div>
+                    <button type="submit">Login</button>
+                    <p id="login-message" class="message"></p>
+                </form>
+                <p class="toggle-link-p"> Forgot password? <button type="button" id="forgot-password-link" class="link-button">Reset here</button> </p>
+                <p class="toggle-link-p"> Don't have an account? <button type="button" id="show-signup-link" class="link-button">Create one here</button> </p>
+            </div>
+            <div id="signup-form-container" class="form-container hidden">
+                 <h2>Create Account - Positive Vibes Project</h2>
+                <form id="signup-form">
+                    <div class="form-group"> <label for="signup-email">Email:</label> <input type="email" id="signup-email" name="email" required> </div>
+                    <div class="form-group"> <label for="signup-password">Password:</label> <input type="password" id="signup-password" name="password" required minlength="6"> </div>
+                    <div class="form-group"> <label for="signup-location">Your City or State (Optional):</label> <input type="text" id="signup-location" name="location" placeholder="e.g., Marshall, MN or Cairo" title="This helps place your marker on the map when you spread a vibe. Keep it general for privacy!"> <small class="form-hint">Helps place your marker on the map. Keep it general for privacy!</small> </div>
+                    <button type="submit">Sign Up</button>
+                    <p id="signup-message" class="message"></p>
+                </form>
+                <p class="toggle-link-p">Already have an account? <button type="button" id="show-login-link" class="link-button">Login here</button></p>
+            </div>
+             <div id="forgot-password-form-container" class="form-container hidden">
+                 <h2>Reset Password</h2>
+                <p>Enter your email address and we'll send you a link to reset your password.</p>
+                <form id="forgot-password-form">
+                    <div class="form-group"> <label for="forgot-email">Email:</label> <input type="email" id="forgot-email" name="email" required> </div>
+                    <button type="submit">Send Reset Link</button>
+                    <p id="forgot-message" class="message"></p>
+                </form>
+                <p class="toggle-link-p">Remembered your password? <button type="button" id="show-login-link-from-forgot" class="link-button">Login here</button></p>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
