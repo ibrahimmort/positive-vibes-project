@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const d = new Date(date); d.setUTCHours(0, 0, 0, 0);
         const day = d.getUTCDay(); const diff = d.getUTCDate() - (day === 0 ? 6 : day - 1);
         return new Date(d.setUTCDate(diff));
-     }
+    }
     function getNextWeekStartUTC(date) {
         const currentWeekStart = getStartOfWeekUTC(date); const nextWeekStartDate = new Date(currentWeekStart);
         nextWeekStartDate.setUTCDate(currentWeekStart.getUTCDate() + 7); return nextWeekStartDate;
@@ -84,27 +84,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Check if essential elements were found
             if (!weeklyThemeElement || !suggestionsListElement || !vibeButton || !weeklyCounterElement || !totalCounterElement || !streakCounterElement || !badgesListElement || !progressBarInnerElement || !nextBadgeTextElement) {
-                 console.warn("[MAIN SCRIPT] Failed to find one or more essential main app elements!");
-                 // Allow partial functionality even if some elements are missing
+                console.warn("[MAIN SCRIPT] Failed to find one or more essential main app elements!");
+                // Allow partial functionality even if some elements are missing
             }
 
             // Ensure contact message element exists if form exists
             if (contactForm && !contactFormMessage) {
-                 console.warn("Contact form message element missing, creating dynamically.");
-                 contactFormMessage = document.createElement('p');
-                 contactFormMessage.id = 'contact-form-message';
-                 contactFormMessage.className = 'message hidden';
-                 if(contactSubmitButton) {
+                console.warn("Contact form message element missing, creating dynamically.");
+                contactFormMessage = document.createElement('p');
+                contactFormMessage.id = 'contact-form-message';
+                contactFormMessage.className = 'message hidden';
+                if(contactSubmitButton) {
                     contactForm.insertBefore(contactFormMessage, contactSubmitButton);
-                 } else if (contactForm) {
+                } else if (contactForm) {
                     contactForm.appendChild(contactFormMessage);
-                 }
+                }
             }
             console.log("[MAIN SCRIPT] Finished assigning main app elements.");
             return true; // Indicate success (or at least completion)
         } catch (error) {
-             console.error("[MAIN SCRIPT] Error during assignMainAppElements:", error);
-             return false; // Indicate failure
+            console.error("[MAIN SCRIPT] Error during assignMainAppElements:", error);
+            return false; // Indicate failure
         }
     }
 
@@ -146,15 +146,20 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) { console.error("[FETCH] Error fetching stats data:", error); return null; }
     }
     /** Fetches map data (/api/map-data) */
-     async function fetchMapData() {
+    async function fetchMapData() {
         console.log("[FETCH] Fetching map data...");
         try {
             const response = await fetch('/api/map-data');
-             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-             const data = await response.json();
-             console.log("[FETCH] Map data received:", data);
-             return data;
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                console.log("[FETCH] Map data received:", data);
+                return data;
         } catch (error) { console.error("[FETCH] Error fetching map data:", error); return []; }
+    }
+    /** Fetches map data and updates UI */
+    async function fetchAndDisplayMapData() {
+        const mapData = await fetchMapData();
+        await updateMapUI(mapData); // await this to ensure geocoding finishes
     }
     /** Geocodes a location string */
     async function geocodeLocation(locationString) {
@@ -167,66 +172,66 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data && data.length > 0) { const result = data[0]; return { lat: parseFloat(result.lat), lon: parseFloat(result.lon) }; }
             else { console.warn(`[GEOCODE] No geocoding results found for "${locationString}"`); return null; }
         } catch (error) { console.error(`[GEOCODE] Error during geocoding fetch for "${locationString}":`, error); return null; }
-     }
+    }
 
 
     // --- UI Update Functions ---
     /** Updates the theme section */
     function updateThemeUI(themeData) {
-          console.log("[UI UPDATE] Updating theme UI. Data:", themeData);
-          // Re-get elements inside update functions to ensure they exist
-          const weeklyThemeElement = document.getElementById('weekly-theme');
-          const suggestionsListElement = document.getElementById('suggestions-list');
-          if (!weeklyThemeElement || !suggestionsListElement) { console.error("[UI UPDATE] Theme/suggestion elements not found for UI update."); return; }
-          if (themeData && themeData.theme) {
-              weeklyThemeElement.textContent = themeData.theme;
-              suggestionsListElement.innerHTML = '';
-              if (themeData.suggestions && themeData.suggestions.length > 0) { const shuffled = [...themeData.suggestions].sort(() => 0.5 - Math.random()); shuffled.slice(0, 3).forEach(suggestion => { const li = document.createElement('li'); li.textContent = suggestion; suggestionsListElement.appendChild(li); }); }
-              else { suggestionsListElement.innerHTML = '<li>No specific suggestions this week. Focus on the theme!</li>'; }
-              console.log("[UI UPDATE] Theme UI updated successfully.");
-          } else { weeklyThemeElement.textContent = 'Theme Unavailable'; suggestionsListElement.innerHTML = `<li>Could not load suggestions.</li>`; console.log("[UI UPDATE] Theme UI set to unavailable/error state."); }
-     }
+            console.log("[UI UPDATE] Updating theme UI. Data:", themeData);
+            // Re-get elements inside update functions to ensure they exist
+            const weeklyThemeElement = document.getElementById('weekly-theme');
+            const suggestionsListElement = document.getElementById('suggestions-list');
+            if (!weeklyThemeElement || !suggestionsListElement) { console.error("[UI UPDATE] Theme/suggestion elements not found for UI update."); return; }
+            if (themeData && themeData.theme) {
+                weeklyThemeElement.textContent = themeData.theme;
+                suggestionsListElement.innerHTML = '';
+                if (themeData.suggestions && themeData.suggestions.length > 0) { const shuffled = [...themeData.suggestions].sort(() => 0.5 - Math.random()); shuffled.slice(0, 3).forEach(suggestion => { const li = document.createElement('li'); li.textContent = suggestion; suggestionsListElement.appendChild(li); }); }
+                else { suggestionsListElement.innerHTML = '<li>No specific suggestions this week. Focus on the theme!</li>'; }
+                console.log("[UI UPDATE] Theme UI updated successfully.");
+            } else { weeklyThemeElement.textContent = 'Theme Unavailable'; suggestionsListElement.innerHTML = `<li>Could not load suggestions.</li>`; console.log("[UI UPDATE] Theme UI set to unavailable/error state."); }
+        }
     /** Updates the stats counters */
     function updateStatsUI(statsData) {
-          console.log("[UI UPDATE] Updating stats UI. Data:", statsData);
-          const weeklyCounterElement = document.getElementById('weekly-counter');
-          const totalCounterElement = document.getElementById('total-counter');
-          if (!weeklyCounterElement || !totalCounterElement) { console.error("[UI UPDATE] Counter elements not found for UI update."); return; }
-          if (statsData) { weeklyCounterElement.textContent = statsData.weeklyVibes ?? 0; totalCounterElement.textContent = statsData.totalVibes ?? 0; console.log("[UI UPDATE] Stats UI updated successfully."); }
-          else { weeklyCounterElement.textContent = 'Err'; totalCounterElement.textContent = 'Err'; console.log("[UI UPDATE] Stats UI set to error state."); }
-     }
+            console.log("[UI UPDATE] Updating stats UI. Data:", statsData);
+            const weeklyCounterElement = document.getElementById('weekly-counter');
+            const totalCounterElement = document.getElementById('total-counter');
+            if (!weeklyCounterElement || !totalCounterElement) { console.error("[UI UPDATE] Counter elements not found for UI update."); return; }
+            if (statsData) { weeklyCounterElement.textContent = statsData.weeklyVibes ?? 0; totalCounterElement.textContent = statsData.totalVibes ?? 0; console.log("[UI UPDATE] Stats UI updated successfully."); }
+            else { weeklyCounterElement.textContent = 'Err'; totalCounterElement.textContent = 'Err'; console.log("[UI UPDATE] Stats UI set to error state."); }
+        }
     /** Updates the gamification section */
     function updateGamificationUI(streak = 0, badges = [], nextBadgeName = '', nextBadgeProgress = 0) {
-         console.log(`[UI UPDATE] Updating gamification UI. Streak: ${streak}, Badges: ${badges?.length}, Next: ${nextBadgeName}, Progress: ${nextBadgeProgress}`);
-         const streakCounterElement = document.getElementById('streak-counter'); const badgesListElement = document.getElementById('badges-list'); const progressBarInnerElement = document.getElementById('progress-bar-inner'); const nextBadgeTextElement = document.getElementById('next-badge-text');
-         if (streakCounterElement) { streakCounterElement.textContent = streak; } else { console.warn("[UI UPDATE] Streak counter element not found."); }
-         if (badgesListElement) { badgesListElement.innerHTML = ''; if (badges && badges.length > 0) { badges.forEach(badgeName => { const badgeEl = document.createElement('span'); badgeEl.classList.add('badge-item'); badgeEl.textContent = badgeName; badgeEl.title = badgeName; badgesListElement.appendChild(badgeEl); }); } else { badgesListElement.innerHTML = '<span class="no-badges">Keep spreading vibes to earn badges!</span>'; } }
-         else { console.warn("[UI UPDATE] Badges list element not found."); }
-         if (progressBarInnerElement && nextBadgeTextElement) { const progressPercent = Math.max(0, Math.min(100, nextBadgeProgress)); progressBarInnerElement.style.width = `${progressPercent}%`; progressBarInnerElement.setAttribute('aria-valuenow', progressPercent); progressBarInnerElement.textContent = `${progressPercent}%`; nextBadgeTextElement.textContent = `Next: ${nextBadgeName || 'N/A'}`; }
-         else { console.warn("[UI UPDATE] Progress bar elements not found."); }
-         console.log("[UI UPDATE] Finished updating gamification elements.");
+            console.log(`[UI UPDATE] Updating gamification UI. Streak: ${streak}, Badges: ${badges?.length}, Next: ${nextBadgeName}, Progress: ${nextBadgeProgress}`);
+            const streakCounterElement = document.getElementById('streak-counter'); const badgesListElement = document.getElementById('badges-list'); const progressBarInnerElement = document.getElementById('progress-bar-inner'); const nextBadgeTextElement = document.getElementById('next-badge-text');
+            if (streakCounterElement) { streakCounterElement.textContent = streak; } else { console.warn("[UI UPDATE] Streak counter element not found."); }
+            if (badgesListElement) { badgesListElement.innerHTML = ''; if (badges && badges.length > 0) { badges.forEach(badgeName => { const badgeEl = document.createElement('span'); badgeEl.classList.add('badge-item'); badgeEl.textContent = badgeName; badgeEl.title = badgeName; badgesListElement.appendChild(badgeEl); }); } else { badgesListElement.innerHTML = '<span class="no-badges">Keep spreading vibes to earn badges!</span>'; } }
+            else { console.warn("[UI UPDATE] Badges list element not found."); }
+            if (progressBarInnerElement && nextBadgeTextElement) { const progressPercent = Math.max(0, Math.min(100, nextBadgeProgress)); progressBarInnerElement.style.width = `${progressPercent}%`; progressBarInnerElement.setAttribute('aria-valuenow', progressPercent); progressBarInnerElement.textContent = `${progressPercent}%`; nextBadgeTextElement.textContent = `Next: ${nextBadgeName || 'N/A'}`; }
+            else { console.warn("[UI UPDATE] Progress bar elements not found."); }
+            console.log("[UI UPDATE] Finished updating gamification elements.");
     }
     /** Updates the map markers */
     async function updateMapUI(mapData) {
-         if (!mapInstance || !mapMarkersLayer) { console.warn("[MAP DEBUG] Map not initialized, cannot update map UI."); return; }
-         console.log("[MAP DEBUG] Updating map UI with data:", mapData);
-         mapMarkersLayer.clearLayers();
-         if (!mapData || mapData.length === 0) { console.log("[MAP DEBUG] No map data to display."); return; }
-         const geocodePromises = mapData.map(item => { if (item && item.location && item.count > 0) { return geocodeLocation(item.location).then(coords => ({ ...item, coords })); } return Promise.resolve(null); });
-         const results = await Promise.allSettled(geocodePromises);
-         console.log("[MAP DEBUG] Geocoding results settled.");
-         results.forEach(result => {
-             if (result.status === 'fulfilled' && result.value && result.value.coords) {
-                 const item = result.value; const locationString = item.location; const count = item.count; const coords = item.coords;
-                 const jitterLat = (Math.random() - 0.5) * 0.01; const jitterLon = (Math.random() - 0.5) * 0.01; const finalLat = coords.lat + jitterLat; const finalLon = coords.lon + jitterLon;
-                 const radius = Math.sqrt(count) * 50000; const finalRadius = Math.max(radius, 20000);
-                 try { L.circle([finalLat, finalLon], { color: '#28a745', fillColor: '#28a745', fillOpacity: 0.4, radius: finalRadius }).bindPopup(`<b>${locationString}</b><br>${count} Vibes`).addTo(mapMarkersLayer); }
-                 catch (circleError) { console.error(`[MAP DEBUG] Error adding circle for ${locationString}:`, circleError); }
-             } else if (result.status === 'fulfilled' && result.value) { console.warn(`[MAP DEBUG] Could not geocode location: "${result.value.location}"`); }
-             else if (result.status === 'rejected') { console.error("[MAP DEBUG] Geocoding promise rejected:", result.reason); }
-         });
-         console.log("[MAP DEBUG] Finished updating map UI.");
-     }
+            if (!mapInstance || !mapMarkersLayer) { console.warn("[MAP DEBUG] Map not initialized, cannot update map UI."); return; }
+            console.log("[MAP DEBUG] Updating map UI with data:", mapData);
+            mapMarkersLayer.clearLayers();
+            if (!mapData || mapData.length === 0) { console.log("[MAP DEBUG] No map data to display."); return; }
+            const geocodePromises = mapData.map(item => { if (item && item.location && item.count > 0) { return geocodeLocation(item.location).then(coords => ({ ...item, coords })); } return Promise.resolve(null); });
+            const results = await Promise.allSettled(geocodePromises);
+            console.log("[MAP DEBUG] Geocoding results settled.");
+            results.forEach(result => {
+                if (result.status === 'fulfilled' && result.value && result.value.coords) {
+                    const item = result.value; const locationString = item.location; const count = item.count; const coords = item.coords;
+                    const jitterLat = (Math.random() - 0.5) * 0.01; const jitterLon = (Math.random() - 0.5) * 0.01; const finalLat = coords.lat + jitterLat; const finalLon = coords.lon + jitterLon;
+                    const radius = Math.sqrt(count) * 50000; const finalRadius = Math.max(radius, 20000);
+                    try { L.circle([finalLat, finalLon], { color: '#28a745', fillColor: '#28a745', fillOpacity: 0.4, radius: finalRadius }).bindPopup(`<b>${locationString}</b><br>${count} Vibes`).addTo(mapMarkersLayer); }
+                    catch (circleError) { console.error(`[MAP DEBUG] Error adding circle for ${locationString}:`, circleError); }
+                } else if (result.status === 'fulfilled' && result.value) { console.warn(`[MAP DEBUG] Could not geocode location: "${result.value.location}"`); }
+                else if (result.status === 'rejected') { console.error("[MAP DEBUG] Geocoding promise rejected:", result.reason); }
+            });
+            console.log("[MAP DEBUG] Finished updating map UI.");
+        }
     /** Sets vibe button style to Active */
     function setButtonStyleActive(button) {
         if (!button) return;
@@ -234,14 +239,14 @@ document.addEventListener('DOMContentLoaded', () => {
         button.classList.remove('vibe-button-countdown'); button.classList.add('vibe-button-active');
         button.textContent = 'P'; button.title = "Push to spread a positive vibe!";
         if (buttonInstructionElement) buttonInstructionElement.innerHTML = "Make sure to spread some Positive Vibes around first<br>then when ready... Push that P!";
-     }
+    }
     /** Sets vibe button style to Countdown */
     function setButtonStyleCountdown(button) {
         if (!button) return;
         const buttonInstructionElement = document.querySelector('.button-instruction');
         button.classList.remove('vibe-button-active'); button.classList.add('vibe-button-countdown');
         if (buttonInstructionElement) buttonInstructionElement.textContent = "You are awesome, continue to spread positive vibes everyday, and next week we meet again.";
-     }
+    }
     /** Updates the vibe button state */
     function updateVibeButtonState(timestampISO) {
         console.log("[UI DEBUG] updateVibeButtonState called with timestamp:", timestampISO);
@@ -256,12 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isNaN(receivedTime)) throw new Error("Invalid date value received");
                 if (receivedTime <= nowTime) { const lastVibeTime = receivedDate; if (lastVibeTime >= startOfThisWeek) { canPushVibe = false; targetCountdownTime = getNextWeekStartUTC(lastVibeTime); } else { canPushVibe = true; } }
                 else { canPushVibe = false; targetCountdownTime = receivedDate; }
-                 if (!canPushVibe && targetCountdownTime <= now) { console.warn("[UI DEBUG] updateVibeButtonState: Next available time is in the past, allowing push."); canPushVibe = true; }
+                if (!canPushVibe && targetCountdownTime <= now) { console.warn("[UI DEBUG] updateVibeButtonState: Next available time is in the past, allowing push."); canPushVibe = true; }
             } catch (e) { console.error("[UI DEBUG] updateVibeButtonState: Error processing timestampISO:", timestampISO, e); canPushVibe = true; }
         }
         if (canPushVibe) { console.log("[UI DEBUG] updateVibeButtonState: Setting button ACTIVE."); vibeButton.disabled = false; setButtonStyleActive(vibeButton); }
         else { console.log("[UI DEBUG] updateVibeButtonState: Setting button COUNTDOWN. Target:", targetCountdownTime instanceof Date ? targetCountdownTime.toISOString() : targetCountdownTime); vibeButton.disabled = true; setButtonStyleCountdown(vibeButton); startCountdown(targetCountdownTime); }
-     }
+    }
     /** Starts the countdown timer interval */
     function startCountdown(targetDate) {
         console.log(`[UI DEBUG] startCountdown called. Target:`, targetDate);
@@ -283,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (countdownIntervalId) clearInterval(countdownIntervalId);
         setButtonStyleCountdown(vibeButton); updateTimer(); countdownIntervalId = setInterval(updateTimer, 60000);
         console.log("[UI DEBUG] startCountdown: Interval started.");
-     }
+    }
 
     // --- Map Initialization ---
     function initializeMap() {
@@ -294,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (!mapInstance) { mapInstance = L.map('map').setView([20, 0], 2); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(mapInstance); mapMarkersLayer = L.layerGroup().addTo(mapInstance); console.log("[MAP DEBUG] Leaflet map instance created."); }
             else { console.log("[MAP DEBUG] Map instance already exists."); }
-            fetchAndDisplayMapData();
+            fetchAndDisplayMapData(); // Fetch data after initializing
         } catch (error) { console.error("[MAP DEBUG] Error initializing Leaflet map:", error); if(mapElement) mapElement.innerHTML = "<p>Error loading map.</p>"; isMapInitialized = false; mapInstance = null; mapMarkersLayer = null; }
     }
 
@@ -319,13 +324,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 await checkSession(); // This re-fetches status and triggers full UI update via loadAppData
                 console.log("[VIBE CLICK DEBUG] checkSession call finished after vibe push.");
             } else if (response.status === 429) {
-                 console.log("[VIBE CLICK DEBUG] Vibe push returned 429 (Already pushed).");
-                 confirmationMessage.textContent = result.message || "Already pushed this week!"; confirmationMessage.className = 'message error'; confirmationMessage.classList.remove('hidden'); setTimeout(() => { if(confirmationMessage) confirmationMessage.classList.add('hidden'); }, 4000);
-                 updateVibeButtonState(result.nextAvailableTimestamp); console.log("[VIBE CLICK DEBUG] updateVibeButtonState call finished after 429.");
+                console.log("[VIBE CLICK DEBUG] Vibe push returned 429 (Already pushed).");
+                confirmationMessage.textContent = result.message || "Already pushed this week!"; confirmationMessage.className = 'message error'; confirmationMessage.classList.remove('hidden'); setTimeout(() => { if(confirmationMessage) confirmationMessage.classList.add('hidden'); }, 4000);
+                updateVibeButtonState(result.nextAvailableTimestamp); console.log("[VIBE CLICK DEBUG] updateVibeButtonState call finished after 429.");
             } else {
                 console.error("[VIBE CLICK DEBUG] Vibe push failed with status:", response.status);
                 confirmationMessage.textContent = result.message || `Error: ${response.status}`; confirmationMessage.className = 'message error'; confirmationMessage.classList.remove('hidden'); setTimeout(() => { if(confirmationMessage) confirmationMessage.classList.add('hidden'); }, 4000);
-                 const currentVibeButton = document.getElementById('vibe-button'); if(currentVibeButton) { currentVibeButton.disabled = false; setButtonStyleActive(currentVibeButton); }
+                const currentVibeButton = document.getElementById('vibe-button'); if(currentVibeButton) { currentVibeButton.disabled = false; setButtonStyleActive(currentVibeButton); }
             }
         } catch (error) {
             console.error('[VIBE CLICK DEBUG] Network error recording vibe:', error);
@@ -333,7 +338,59 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentVibeButton = document.getElementById('vibe-button'); if(currentVibeButton) { currentVibeButton.disabled = false; setButtonStyleActive(currentVibeButton); }
         }
     }
-    async function handleContactFormSubmit(event) { /* ... unchanged ... */ }
+    async function handleContactFormSubmit(event) {
+        event.preventDefault();
+        console.log("[CONTACT FORM DEBUG] Contact form submitted.");
+        const contactTextarea = document.getElementById('contact-message');
+        const contactSubmitButton = document.getElementById('contact-submit-button');
+        const contactFormMessage = document.getElementById('contact-form-message');
+
+        if (!contactTextarea || !contactSubmitButton || !contactFormMessage) {
+            console.error("[CONTACT FORM DEBUG] Contact form elements missing.");
+            return;
+        }
+        const messageContent = contactTextarea.value.trim();
+        if (!messageContent) {
+            contactFormMessage.textContent = 'Please enter a message.';
+            contactFormMessage.className = 'message error';
+            contactFormMessage.classList.remove('hidden');
+            return;
+        }
+
+        contactFormMessage.textContent = 'Sending...';
+        contactFormMessage.className = 'message'; // Neutral style while sending
+        contactFormMessage.classList.remove('hidden');
+        contactSubmitButton.disabled = true;
+
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: messageContent }),
+                credentials: 'include' // Send session cookie if logged in
+            });
+            const result = await response.json();
+            console.log("[CONTACT FORM DEBUG] Contact response:", response.status, result);
+
+            if (response.ok) {
+                contactFormMessage.textContent = result.message || 'Message sent successfully!';
+                contactFormMessage.className = 'message success';
+                contactTextarea.value = ''; // Clear textarea on success
+            } else {
+                contactFormMessage.textContent = result.message || `Error: ${response.status}`;
+                contactFormMessage.className = 'message error';
+            }
+        } catch (error) {
+            console.error("[CONTACT FORM DEBUG] Contact form network error:", error);
+            contactFormMessage.textContent = 'Network error. Please try again.';
+            contactFormMessage.className = 'message error';
+        } finally {
+            contactSubmitButton.disabled = false;
+            contactFormMessage.classList.remove('hidden');
+            // Optionally hide the message after a few seconds
+            setTimeout(() => { if(contactFormMessage) contactFormMessage.classList.add('hidden'); }, 5000);
+        }
+    }
     async function handleSignupSubmit(event) {
         event.preventDefault(); // *** ENSURE THIS IS PRESENT ***
         console.log("[SIGNUP DEBUG] Signup form submitted.");
@@ -351,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else { signupMessageElement.textContent = result.message || `Error: ${response.status}`; signupMessageElement.className = 'message error'; }
         } catch (error) { console.error("[SIGNUP DEBUG] Signup network error:", error); signupMessageElement.textContent = 'Network error. Please try again.'; signupMessageElement.className = 'message error'; }
         finally { signupMessageElement.classList.remove('hidden'); }
-     }
+    }
     async function handleLoginSubmit(event) {
         event.preventDefault(); // *** ENSURE THIS IS PRESENT ***
         console.log("[LOGIN DEBUG] Login form submitted.");
@@ -360,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const emailInput = document.getElementById('login-email'); const passwordInput = document.getElementById('login-password');
         const email = emailInput ? emailInput.value.trim() : ''; const password = passwordInput ? passwordInput.value : '';
         if (!email || !password) { loginMessageElement.textContent = 'Please enter both email and password.'; loginMessageElement.className = 'message error'; loginMessageElement.classList.remove('hidden'); return; }
-         console.log("[LOGIN DEBUG] Sending login request...");
+        console.log("[LOGIN DEBUG] Sending login request...");
         try {
             const loginResponse = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }), credentials: 'include' });
             const loginResult = await loginResponse.json(); console.log("[LOGIN DEBUG] Login response:", loginResponse.status, loginResult);
@@ -374,16 +431,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) { console.error("[LOGIN DEBUG] Login network error:", error); loginMessageElement.textContent = 'Network error. Please try again.'; loginMessageElement.className = 'message error'; }
         finally { loginMessageElement.classList.remove('hidden'); }
-     }
+    }
     function handleLogout() {
         console.log("[LOGOUT DEBUG] Logout button clicked.");
-         if (countdownIntervalId) { clearInterval(countdownIntervalId); countdownIntervalId = null; }
-         if (mapInstance) { mapInstance.remove(); mapInstance = null; mapMarkersLayer = null; isMapInitialized = false; }
+        if (countdownIntervalId) { clearInterval(countdownIntervalId); countdownIntervalId = null; }
+        if (mapInstance) { mapInstance.remove(); mapInstance = null; mapMarkersLayer = null; isMapInitialized = false; }
         fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
         .then(res => res.json()).then(data => console.log("[LOGOUT DEBUG] Logout response:", data))
         .catch(error => console.error("[LOGOUT DEBUG] Error during logout fetch:", error))
         .finally(() => { updateLoginUI(false); }); // Show logged out UI
-     }
+    }
     function handleForgotPassword(event) {
         if (event) event.preventDefault(); // *** ENSURE THIS IS PRESENT ***
         console.log("[FORM TOGGLE DEBUG] handleForgotPassword called.");
@@ -391,10 +448,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (signupFormContainer) signupFormContainer.classList.add('hidden');
         if (forgotPasswordFormContainer) forgotPasswordFormContainer.classList.remove('hidden');
         if(loginMessageElement) loginMessageElement.textContent = ''; if(signupMessageElement) signupMessageElement.textContent = ''; if(forgotMessageElement) forgotMessageElement.textContent = '';
-     }
+    }
     async function handleForgotPasswordSubmit(event) {
         event.preventDefault(); // *** ENSURE THIS IS PRESENT ***
-         console.log("[FORGOT PW DEBUG] Forgot password form submitted.");
+        console.log("[FORGOT PW DEBUG] Forgot password form submitted.");
         if (!forgotMessageElement || !forgotPasswordForm) return;
         forgotMessageElement.textContent = ''; forgotMessageElement.className = 'message hidden';
         const emailInput = document.getElementById('forgot-email'); const email = emailInput ? emailInput.value.trim() : '';
@@ -407,19 +464,67 @@ document.addEventListener('DOMContentLoaded', () => {
             forgotMessageElement.textContent = result.message || 'If an account exists for this email, a reset link has been sent.'; forgotMessageElement.className = 'message success'; forgotPasswordForm.reset();
         } catch (error) { console.error("[FORGOT PW DEBUG] Forgot password network error:", error); forgotMessageElement.textContent = 'Network error. Please try again.'; forgotMessageElement.className = 'message error'; }
         finally { if(submitButton) submitButton.disabled = false; forgotMessageElement.classList.remove('hidden'); }
-     }
+    }
     function showSignupForm(event) {
         if (event) event.preventDefault(); // *** ENSURE THIS IS PRESENT ***
         console.log("[FORM TOGGLE DEBUG] showSignupForm called.");
         if (loginFormContainer && signupFormContainer && forgotPasswordFormContainer) { if(loginMessageElement) loginMessageElement.textContent = ''; if(signupMessageElement) signupMessageElement.textContent = ''; if(forgotMessageElement) forgotMessageElement.textContent = ''; loginFormContainer.classList.add('hidden'); forgotPasswordFormContainer.classList.add('hidden'); signupFormContainer.classList.remove('hidden'); }
         else { console.error("Form containers not found for toggling."); }
-     }
+    }
     function showLoginForm(event) {
         if (event) event.preventDefault(); // *** ENSURE THIS IS PRESENT ***
-         console.log("[FORM TOGGLE DEBUG] showLoginForm called.");
-         if (loginFormContainer && signupFormContainer && forgotPasswordFormContainer) { if(loginMessageElement) loginMessageElement.textContent = ''; if(signupMessageElement) signupMessageElement.textContent = ''; if(forgotMessageElement) forgotMessageElement.textContent = ''; signupFormContainer.classList.add('hidden'); forgotPasswordFormContainer.classList.add('hidden'); loginFormContainer.classList.remove('hidden'); }
-         else { console.error("Form containers not found for toggling."); }
-     }
+        console.log("[FORM TOGGLE DEBUG] showLoginForm called.");
+        if (loginFormContainer && signupFormContainer && forgotPasswordFormContainer) { if(loginMessageElement) loginMessageElement.textContent = ''; if(signupMessageElement) signupMessageElement.textContent = ''; if(forgotMessageElement) forgotMessageElement.textContent = ''; signupFormContainer.classList.add('hidden'); forgotPasswordFormContainer.classList.add('hidden'); loginFormContainer.classList.remove('hidden'); }
+        else { console.error("Form containers not found for toggling."); }
+    }
+
+    // --- Add App Event Listeners Function ---  <<<<< NEW FUNCTION DEFINITION
+    /**
+     * Adds event listeners to elements within the main application view.
+     * Should only be called AFTER assignMainAppElements has run successfully.
+     */
+    function addAppEventListeners() {
+        console.log("[MAIN SCRIPT] Adding main app event listeners...");
+
+        // Get references again, or ensure they are accessible from the higher scope
+        // Re-getting them here ensures they are the most current elements
+        const vibeButton = document.getElementById('vibe-button');
+        const logoutButton = document.getElementById('logout-button');
+        const contactForm = document.getElementById('contact-form');
+        // ... add any other elements within the main app that need listeners ...
+
+        if (vibeButton) {
+            // Remove existing listener first to prevent duplicates if this runs multiple times
+            vibeButton.removeEventListener('click', handleVibeButtonClick);
+            vibeButton.addEventListener('click', handleVibeButtonClick);
+            console.log("[MAIN SCRIPT DEBUG] Vibe button listener attached.");
+        } else {
+            console.error("[MAIN SCRIPT DEBUG] Vibe button not found for listener attachment.");
+        }
+
+        if (logoutButton) {
+            // Remove existing listener first
+            logoutButton.removeEventListener('click', handleLogout);
+            logoutButton.addEventListener('click', handleLogout);
+            console.log("[MAIN SCRIPT DEBUG] Logout button listener attached.");
+        } else {
+            console.error("[MAIN SCRIPT DEBUG] Logout button not found for listener attachment.");
+        }
+
+        if (contactForm) {
+            // Remove existing listener first
+            contactForm.removeEventListener('submit', handleContactFormSubmit);
+            contactForm.addEventListener('submit', handleContactFormSubmit);
+            console.log("[MAIN SCRIPT DEBUG] Contact form listener attached.");
+        } else {
+            console.error("[MAIN SCRIPT DEBUG] Contact form not found for listener attachment.");
+        }
+
+        // Add other listeners for main app elements here...
+
+        console.log("[MAIN SCRIPT] Finished adding main app event listeners.");
+    }
+
 
     // --- Authentication & UI Flow ---
 
@@ -437,8 +542,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Assign elements *before* trying to update anything
         if (!assignMainAppElements()) { console.error("[MAIN SCRIPT] Failed to assign main app elements in loadAppData."); return; }
 
-        // Add listeners for the main app elements
+        // Add listeners for the main app elements  <<<<< CALL TO THE NEW FUNCTION
         addAppEventListeners();
+
         // Initialize map
         initializeMap(); // Safe to call multiple times due to flag
 
@@ -461,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const [themeResult, statsResult] = await Promise.allSettled([
             fetchThemeData(),
             fetchStatsData()
-            // Map data is fetched within initializeMap/updateMapUI
+            // Map data is fetched within initializeMap/fetchAndDisplayMapData
         ]);
         console.log("[MAIN SCRIPT] Theme and stats fetches completed.");
 
@@ -479,8 +585,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`[UI DEBUG] updateLoginUI called. isLoggedIn: ${isLoggedIn}, email: ${email}, streak: ${streak}`);
         if (isLoggedIn) {
             // Call loadAppData to handle showing UI and fetching data
-             const initialStatusData = { loggedIn: true, email, lastVibeTimestamp: lastVibeTimestampISO, currentStreak: streak, badges, nextBadgeName, nextBadgeProgress };
-             loadAppData(initialStatusData); // Pass initial data to avoid extra status fetch here
+                const initialStatusData = { loggedIn: true, email, lastVibeTimestamp: lastVibeTimestampISO, currentStreak: streak, badges, nextBadgeName, nextBadgeProgress };
+                loadAppData(initialStatusData); // Pass initial data to avoid extra status fetch here
         } else {
             // Logout Cleanup
             console.log("[UI DEBUG] Handling logout state.");
@@ -490,10 +596,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if(mainAppContent) mainAppContent.classList.add('hidden');
             if(accountAreaWrapper) accountAreaWrapper.classList.remove('hidden');
 
+            // Ensure user status is hidden on logout
+            const userStatusElement = document.getElementById('user-status');
             if (userStatusElement) userStatusElement.classList.add('hidden');
+
+            // Reset to show login form by default on logout
             if (loginFormContainer) loginFormContainer.classList.remove('hidden');
             if (signupFormContainer) signupFormContainer.classList.add('hidden');
             if (forgotPasswordFormContainer) forgotPasswordFormContainer.classList.add('hidden');
+
+            // Clear any messages on login/signup forms
+            if (loginMessageElement) loginMessageElement.textContent = '';
+            if (signupMessageElement) signupMessageElement.textContent = '';
+            if (forgotMessageElement) forgotMessageElement.textContent = '';
 
             // No need to reset inner elements if mainAppContent is hidden
         }
