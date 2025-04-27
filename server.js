@@ -346,7 +346,9 @@ connectDB().then(() => {
   console.log("[SERVER START] Error handling middleware configured.");
 
   // --- Start Listening ---
-  app.listen(PORT, () => { console.log(`[SERVER START] Server listening on port ${PORT}... Application should be LIVE.`); });
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[SERVER START] Server listening on 0.0.0.0:${PORT}... Application should be LIVE.`); // Optional: Update log message too
+});
 
  }).catch(err => {
      console.error("[SERVER START] CRITICAL ERROR during startup (connectDB failed):", err);
