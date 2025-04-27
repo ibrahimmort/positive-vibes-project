@@ -171,4 +171,4 @@ document.addEventListener('DOMContentLoaded', () => {
             initializeCountdown(result.nextAvailableTimestamp);
             loadUserData(); // Reload streaks, badges, etc.
         } catch (error) {
-            console.error("[VIBE] Failed to send a vibe:", error);
+console.error("[VIBE] Failed to send a vibe:", error);
