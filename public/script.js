@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (themeData && themeData.theme) {
                 weeklyThemeElement.textContent = themeData.theme;
                 suggestionsListElement.innerHTML = '';
-                if (themeData.suggestions && themeData.suggestions.length > 0) { const shuffled = [...themeData.suggestions].sort(() => 0.5 - Math.random()); shuffled.slice.forEach(suggestion => { const li = document.createElement('li'); li.textContent = suggestion; suggestionsListElement.appendChild(li); }); }
+                if (themeData.suggestions && themeData.suggestions.length > 0) { const shuffled = [...themeData.suggestions].sort(() => 0.5 - Math.random()); shuffled.slice(0, 5).forEach(suggestion => { const li = document.createElement('li'); li.textContent = suggestion; suggestionsListElement.appendChild(li); }); }
                 else { suggestionsListElement.innerHTML = '<li>No specific suggestions this week. Focus on the theme!</li>'; }
                 console.log("[UI UPDATE] Theme UI updated successfully.");
             } else { weeklyThemeElement.textContent = 'Theme Unavailable'; suggestionsListElement.innerHTML = `<li>Could not load suggestions.</li>`; console.log("[UI UPDATE] Theme UI set to unavailable/error state."); }
