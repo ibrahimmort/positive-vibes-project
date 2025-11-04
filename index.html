@@ -245,17 +245,13 @@
                 this.connected = false;
             }
 
-            connect(channel, oauth) {
-                // Initialize Twitch client
+            connect(channel) {
+                // Initialize Twitch client (anonymous connection)
                 this.client = new tmi.Client({
                     options: { debug: false },
                     connection: {
                         secure: true,
                         reconnect: true
-                    },
-                    identity: {
-                        username: TWITCH_CONFIG.username,
-                        password: oauth
                     },
                     channels: [channel]
                 });
@@ -375,10 +371,10 @@
                 twitchChat = new TwitchChatController(simulation);
 
                 // Connect to Twitch if config is available
-                if (typeof TWITCH_CONFIG !== 'undefined' && TWITCH_CONFIG.channel && TWITCH_CONFIG.oauth) {
-                    twitchChat.connect(TWITCH_CONFIG.channel, TWITCH_CONFIG.oauth);
+                if (typeof TWITCH_CONFIG !== 'undefined' && TWITCH_CONFIG.channel) {
+                    twitchChat.connect(TWITCH_CONFIG.channel);
                 } else {
-                    console.error('❌ Twitch configuration not found! Please create config.js');
+                    console.error('❌ Twitch configuration not found! Please create config.js with your channel name');
                     document.getElementById('connection-status').textContent = 'No Config';
                 }
 

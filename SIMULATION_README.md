@@ -29,32 +29,25 @@ An interactive Twitch show where viewers control visual simulations through chat
 
 ## 🚀 Setup Instructions
 
-### Step 1: Get Your Twitch OAuth Token
-
-1. Go to [https://twitchapps.com/tmi/](https://twitchapps.com/tmi/)
-2. Click "Connect" and authorize the application
-3. Copy the OAuth token (it starts with `oauth:`)
-4. **IMPORTANT**: Keep this token secret! Never share it or commit it to git
-
-### Step 2: Configure the Application
+### Step 1: Configure the Application
 
 1. Copy the example config file:
    ```bash
    cp config.example.js config.js
    ```
 
-2. Edit `config.js` with your credentials:
+2. Edit `config.js` with your Twitch channel name:
    ```javascript
    const TWITCH_CONFIG = {
-       channel: 'your_channel_name',      // Your Twitch channel (lowercase)
-       username: 'your_username',         // Your Twitch username
-       oauth: 'oauth:your_token_here'     // Your OAuth token from step 1
+       channel: 'your_channel_name'      // Your Twitch channel (lowercase)
    };
    ```
 
 3. Save the file. The `.gitignore` will prevent it from being committed.
 
-### Step 3: Test Locally
+**Note**: The simulation uses anonymous chat connection (read-only), so no OAuth token is needed! It can read chat commands but won't send messages back.
+
+### Step 2: Test Locally
 
 1. You'll need a local web server (can't just open the HTML file due to CORS):
 
@@ -83,7 +76,7 @@ An interactive Twitch show where viewers control visual simulations through chat
 
 4. Test commands in your Twitch chat!
 
-### Step 4: Deploy to GitHub Pages
+### Step 3: Deploy to GitHub Pages
 
 1. **Create a new repository** on GitHub (or use existing)
 
@@ -101,33 +94,15 @@ An interactive Twitch show where viewers control visual simulations through chat
    - Click "Save"
 
 4. **Add your config to GitHub Pages**:
-   - After deployment, you'll need to manually add your `config.js` to the live site
-   - **Option A**: Use GitHub's web interface to create `config.js` directly in the repo (on a separate branch or as a secret)
-   - **Option B**: Use GitHub Secrets and modify the HTML to load config from a different source
-   - **Option C**: Fork the approach below with environment variables
+   - Use GitHub's web interface to create `config.js` directly in the repo
+   - Or commit it to your repository (it only contains your channel name, no secrets!)
+   - Since we're using anonymous chat, it's safe to commit `config.js`
 
 5. Your site will be live at: `https://your-username.github.io/your-repo-name/`
 
-### 🔒 Security Note for GitHub Pages
+### 🔒 Security Note
 
-Since `config.js` contains your OAuth token, you have a few options:
-
-**Option 1: Separate Config Branch (Recommended)**
-- Create a private branch with your config
-- Deploy from that branch to GitHub Pages
-- Keep the main branch public without credentials
-
-**Option 2: Environment Variables**
-- Modify the code to read from URL parameters
-- Pass the OAuth token via OBS Browser Source URL
-- Example: `https://your-site.com?oauth=token&channel=name`
-
-**Option 3: Backend Proxy**
-- Create a simple serverless function (Netlify, Vercel, etc.)
-- Have it relay chat messages without exposing your token
-- Update the client to connect to your proxy instead
-
-For this POC, **Option 2** is easiest for OBS usage.
+Since the simulation uses **anonymous chat connection**, there are no credentials to protect! The `config.js` file only contains your public Twitch channel name, so it's safe to commit to your repository. The `.gitignore` is set up to exclude it by default for consistency, but you can safely add it if needed for deployment.
 
 ## 🎥 Add to OBS as Browser Source
 
@@ -231,19 +206,20 @@ You can test the simulation without Twitch:
 ### "Twitch: No Config" Status
 - Make sure you created `config.js` from `config.example.js`
 - Check that the file is in the same directory as `index.html`
-- Verify the OAuth token starts with `oauth:`
+- Verify your channel name is correct (lowercase)
 
 ### "Twitch: Disconnected" Status
 - Check your internet connection
-- Verify your OAuth token is valid (regenerate if needed)
-- Make sure the channel name matches your Twitch username
+- Make sure the channel name is correct and exists on Twitch
+- The channel must be live or have recent chat activity
 - Check browser console for error messages
 
 ### Commands Not Working
 - Make sure commands start with `!`
 - Check that you're in the correct Twitch channel
-- Verify the bot is connected (status shows "Connected")
+- Verify the simulation is connected (status shows "Connected")
 - Look for command responses in the browser console
+- Try sending a test command like `!spawn` in your chat
 
 ### Performance Issues
 - Reduce max particles in `SimulationEngine` constructor (`index.html:76`)

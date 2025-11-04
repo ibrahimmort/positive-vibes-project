@@ -4,21 +4,14 @@
 //
 // SETUP INSTRUCTIONS:
 // 1. Copy this file to 'config.js' (DO NOT commit config.js to git!)
-// 2. Get your Twitch OAuth token from: https://twitchapps.com/tmi/
-// 3. Replace the values below with your Twitch channel and OAuth token
-// 4. The OAuth token should start with 'oauth:' - keep that prefix!
+// 2. Replace 'your_channel_name' with your Twitch channel name
+// 3. That's it! The simulation uses anonymous chat connection (read-only)
 //
-// WARNING: Never commit your actual config.js file to a public repository!
+// NOTE: Anonymous connections can read chat but cannot send messages.
+// This is perfect for visualizations that only need to listen to commands!
 // ============================================================================
 
 const TWITCH_CONFIG = {
     // Your Twitch channel name (lowercase)
-    channel: 'your_channel_name',
-
-    // Your Twitch bot username (can be the same as your channel name)
-    username: 'your_username',
-
-    // Your OAuth token from https://twitchapps.com/tmi/
-    // IMPORTANT: This should start with 'oauth:'
-    oauth: 'oauth:your_token_here'
+    channel: 'your_channel_name'
 };
