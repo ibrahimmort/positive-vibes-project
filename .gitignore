@@ -2,3 +2,5 @@ node_modules
 .env
 # Sentry Config File
 .sentryclirc
+# Twitch OAuth Configuration
+config.js

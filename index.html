@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Simulation - Twitch Interactive</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/dist/tmi.min.js"></script>
+    <script src="config.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', monospace;
+        }
+        #info-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            border: 2px solid #00ff00;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 1000;
+        }
+        #info-panel h3 {
+            margin: 0 0 10px 0;
+            color: #00ff00;
+            font-size: 14px;
+        }
+        #info-panel .command {
+            color: #ffff00;
+            margin: 5px 0;
+        }
+        #status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 5px;
+            border: 2px solid #00ff00;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        .status-connected {
+            color: #00ff00 !important;
+        }
+        .status-disconnected {
+            color: #ff0000 !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Status Indicator -->
+    <div id="status">
+        <div>Twitch: <span id="connection-status" class="status-disconnected">Disconnected</span></div>
+        <div>Channel: <span id="channel-name">-</span></div>
+        <div>Particles: <span id="particle-count">0</span></div>
+    </div>
+
+    <!-- Command Info Panel -->
+    <div id="info-panel">
+        <h3>🎮 CHAT COMMANDS</h3>
+        <div class="command">!spawn - Add particles</div>
+        <div class="command">!gravity [up/down/left/right] - Change gravity</div>
+        <div class="command">!clear - Remove all particles</div>
+        <div class="command">!speed [1-10] - Adjust speed</div>
+        <div class="command">!color [red/blue/green/rainbow] - Change colors</div>
+    </div>
+
+    <script>
+        // ============================================================================
+        // PARTICLE CLASS
+        // ============================================================================
+        // Each particle has position, velocity, acceleration, and visual properties
+        class Particle {
+            constructor(p5, x, y, colorMode = 'rainbow') {
+                this.p5 = p5;
+                this.pos = p5.createVector(x, y);
+                this.vel = p5.createVector(p5.random(-2, 2), p5.random(-2, 2));
+                this.acc = p5.createVector(0, 0);
+                this.lifespan = 255;
+                this.size = p5.random(4, 12);
+                this.colorMode = colorMode;
+                this.hue = p5.random(360);
+            }
+
+            applyForce(force) {
+                this.acc.add(force);
+            }
+
+            update() {
+                this.vel.add(this.acc);
+                this.pos.add(this.vel);
+                this.acc.mult(0);
+                this.lifespan -= 1;
+
+                // Bounce off edges
+                if (this.pos.x < 0 || this.pos.x > this.p5.width) {
+                    this.vel.x *= -0.8;
+                    this.pos.x = this.p5.constrain(this.pos.x, 0, this.p5.width);
+                }
+                if (this.pos.y < 0 || this.pos.y > this.p5.height) {
+                    this.vel.y *= -0.8;
+                    this.pos.y = this.p5.constrain(this.pos.y, 0, this.p5.height);
+                }
+            }
+
+            display() {
+                const p = this.p5;
+                p.noStroke();
+
+                // Set color based on color mode
+                switch(this.colorMode) {
+                    case 'red':
+                        p.fill(255, 50, 50, this.lifespan);
+                        break;
+                    case 'blue':
+                        p.fill(50, 100, 255, this.lifespan);
+                        break;
+                    case 'green':
+                        p.fill(50, 255, 100, this.lifespan);
+                        break;
+                    case 'rainbow':
+                    default:
+                        p.colorMode(p.HSB);
+                        p.fill(this.hue, 80, 100, this.lifespan / 255);
+                        p.colorMode(p.RGB);
+                        break;
+                }
+
+                p.ellipse(this.pos.x, this.pos.y, this.size);
+            }
+
+            isDead() {
+                return this.lifespan < 0;
+            }
+        }
+
+        // ============================================================================
+        // SIMULATION ENGINE
+        // ============================================================================
+        // Manages the particle system and responds to chat commands
+        class SimulationEngine {
+            constructor(p5) {
+                this.p5 = p5;
+                this.particles = [];
+                this.gravity = p5.createVector(0, 0.1);
+                this.speedMultiplier = 1.0;
+                this.colorMode = 'rainbow';
+                this.maxParticles = 500; // Performance limit
+            }
+
+            addParticles(count, x, y) {
+                for (let i = 0; i < count; i++) {
+                    if (this.particles.length < this.maxParticles) {
+                        const spawnX = x || this.p5.width / 2 + this.p5.random(-50, 50);
+                        const spawnY = y || this.p5.height / 2 + this.p5.random(-50, 50);
+                        this.particles.push(new Particle(this.p5, spawnX, spawnY, this.colorMode));
+                    }
+                }
+            }
+
+            setGravity(direction) {
+                const strength = 0.2;
+                switch(direction.toLowerCase()) {
+                    case 'up':
+                        this.gravity = this.p5.createVector(0, -strength);
+                        break;
+                    case 'down':
+                        this.gravity = this.p5.createVector(0, strength);
+                        break;
+                    case 'left':
+                        this.gravity = this.p5.createVector(-strength, 0);
+                        break;
+                    case 'right':
+                        this.gravity = this.p5.createVector(strength, 0);
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            }
+
+            setSpeed(speed) {
+                this.speedMultiplier = this.p5.constrain(speed, 0.1, 3.0);
+            }
+
+            setColorMode(mode) {
+                const validModes = ['red', 'blue', 'green', 'rainbow'];
+                if (validModes.includes(mode.toLowerCase())) {
+                    this.colorMode = mode.toLowerCase();
+                    return true;
+                }
+                return false;
+            }
+
+            clear() {
+                this.particles = [];
+            }
+
+            update() {
+                // Update all particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.applyForce(this.gravity);
+
+                    // Apply speed multiplier to velocity
+                    p.vel.mult(this.speedMultiplier);
+                    p.update();
+                    p.vel.mult(1 / this.speedMultiplier);
+
+                    p.display();
+
+                    // Remove dead particles
+                    if (p.isDead()) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+
+                // Update UI
+                document.getElementById('particle-count').textContent = this.particles.length;
+            }
+
+            getParticleCount() {
+                return this.particles.length;
+            }
+        }
+
+        // ============================================================================
+        // TWITCH CHAT INTEGRATION
+        // ============================================================================
+        // Connects to Twitch chat and processes commands
+        class TwitchChatController {
+            constructor(simulationEngine) {
+                this.simulation = simulationEngine;
+                this.client = null;
+                this.connected = false;
+            }
+
+            connect(channel) {
+                // Initialize Twitch client (anonymous connection)
+                this.client = new tmi.Client({
+                    options: { debug: false },
+                    connection: {
+                        secure: true,
+                        reconnect: true
+                    },
+                    channels: [channel]
+                });
+
+                // Handle connection
+                this.client.on('connected', (address, port) => {
+                    console.log(`Connected to ${address}:${port}`);
+                    this.connected = true;
+                    document.getElementById('connection-status').textContent = 'Connected';
+                    document.getElementById('connection-status').className = 'status-connected';
+                    document.getElementById('channel-name').textContent = channel;
+                });
+
+                // Handle disconnection
+                this.client.on('disconnected', (reason) => {
+                    console.log(`Disconnected: ${reason}`);
+                    this.connected = false;
+                    document.getElementById('connection-status').textContent = 'Disconnected';
+                    document.getElementById('connection-status').className = 'status-disconnected';
+                });
+
+                // Handle incoming messages
+                this.client.on('message', (channel, tags, message, self) => {
+                    if (self) return; // Ignore messages from the bot itself
+                    this.handleCommand(tags.username, message);
+                });
+
+                // Connect to Twitch
+                this.client.connect().catch(console.error);
+            }
+
+            handleCommand(username, message) {
+                // Only process messages that start with !
+                if (!message.startsWith('!')) return;
+
+                const parts = message.toLowerCase().trim().split(' ');
+                const command = parts[0];
+                const args = parts.slice(1);
+
+                console.log(`Command from ${username}: ${command} ${args.join(' ')}`);
+
+                // ============================================================================
+                // COMMAND HANDLERS
+                // ============================================================================
+                // Each command modifies the simulation in a specific way
+
+                switch(command) {
+                    case '!spawn':
+                        // Spawn 10 particles at the center
+                        this.simulation.addParticles(10);
+                        console.log(`✨ Spawned 10 particles (triggered by ${username})`);
+                        break;
+
+                    case '!gravity':
+                        // Change gravity direction
+                        if (args.length > 0) {
+                            if (this.simulation.setGravity(args[0])) {
+                                console.log(`🌍 Gravity set to ${args[0]} (triggered by ${username})`);
+                            }
+                        }
+                        break;
+
+                    case '!clear':
+                        // Remove all particles
+                        this.simulation.clear();
+                        console.log(`🧹 Cleared all particles (triggered by ${username})`);
+                        break;
+
+                    case '!speed':
+                        // Adjust particle speed
+                        if (args.length > 0) {
+                            const speed = parseFloat(args[0]);
+                            if (!isNaN(speed)) {
+                                this.simulation.setSpeed(speed / 5.0); // Normalize to reasonable range
+                                console.log(`⚡ Speed set to ${speed} (triggered by ${username})`);
+                            }
+                        }
+                        break;
+
+                    case '!color':
+                        // Change particle color mode
+                        if (args.length > 0) {
+                            if (this.simulation.setColorMode(args[0])) {
+                                console.log(`🎨 Color mode set to ${args[0]} (triggered by ${username})`);
+                            }
+                        }
+                        break;
+
+                    case '!explode':
+                        // Bonus command: Create explosion effect
+                        const centerX = this.simulation.p5.width / 2;
+                        const centerY = this.simulation.p5.height / 2;
+                        this.simulation.addParticles(50, centerX, centerY);
+                        console.log(`💥 Explosion! (triggered by ${username})`);
+                        break;
+                }
+            }
+        }
+
+        // ============================================================================
+        // P5.JS SKETCH (INSTANCE MODE)
+        // ============================================================================
+        // Main animation loop and setup
+        const sketch = (p) => {
+            let simulation;
+            let twitchChat;
+
+            p.setup = () => {
+                // Create canvas that fills the window
+                p.createCanvas(p.windowWidth, p.windowHeight);
+                p.colorMode(p.RGB);
+
+                // Initialize simulation engine
+                simulation = new SimulationEngine(p);
+
+                // Initialize Twitch chat controller
+                twitchChat = new TwitchChatController(simulation);
+
+                // Connect to Twitch if config is available
+                if (typeof TWITCH_CONFIG !== 'undefined' && TWITCH_CONFIG.channel) {
+                    twitchChat.connect(TWITCH_CONFIG.channel);
+                } else {
+                    console.error('❌ Twitch configuration not found! Please create config.js with your channel name');
+                    document.getElementById('connection-status').textContent = 'No Config';
+                }
+
+                // Add some initial particles for visual interest
+                simulation.addParticles(20);
+            };
+
+            p.draw = () => {
+                // Dark background with fade effect
+                p.background(0, 25);
+
+                // Update and render simulation
+                simulation.update();
+            };
+
+            // Handle window resize
+            p.windowResized = () => {
+                p.resizeCanvas(p.windowWidth, p.windowHeight);
+            };
+
+            // Optional: Add particles on click for testing
+            p.mousePressed = () => {
+                simulation.addParticles(5, p.mouseX, p.mouseY);
+            };
+        };
+
+        // Create p5 instance
+        new p5(sketch);
+    </script>
+</body>
+</html>
