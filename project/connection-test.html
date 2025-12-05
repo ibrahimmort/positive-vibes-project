@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LocalStorage Connection Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#0f1323; color:#f8f8ff; display:flex; flex-direction:column; align-items:center; gap:12px; padding:30px; }
+    input { padding:8px; border-radius:8px; border:1px solid #445; background:#1b2140; color:#fff; }
+    button { padding:8px 14px; border:none; background:#7de2fc; color:#04101b; font-weight:700; border-radius:10px; cursor:pointer; }
+    #log { width:100%; max-width:640px; min-height:180px; background:#161a33; border:1px solid #334; border-radius:12px; padding:10px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h1>Connection Test</h1>
+  <p>Open widgets and this page in two tabs. Send messages to verify localStorage events propagate.</p>
+  <div>
+    <input id="message" placeholder="Type a test payload" style="width:320px;">
+    <button onclick="send()">Send</button>
+  </div>
+  <div id="log"></div>
+<script>
+  const log = document.getElementById('log');
+  function send(){
+    const value = document.getElementById('message').value || 'ping';
+    localStorage.setItem('streamCommand', JSON.stringify({ widget:'test', command:'echo', data:value, timestamp:Date.now() }));
+    append(`Sent: ${value}`);
+  }
+  function append(msg){
+    const line = document.createElement('div');
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    log.prepend(line);
+  }
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'streamCommand' && e.newValue) {
+      append(`Received: ${e.newValue}`);
+    }
+  });
+</script>
+</body>
+</html>

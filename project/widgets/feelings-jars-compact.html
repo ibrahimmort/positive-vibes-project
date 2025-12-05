@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Feelings Jars - Compact</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: linear-gradient(145deg, #0c102b, #141a3a 70%);
+      --glass: rgba(255,255,255,0.07);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      width: 640px;
+      height: 360px;
+      overflow: hidden;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: #f5f6ff;
+      padding: 12px;
+      position: relative;
+    }
+    body::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(1px 1px at 15% 30%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,0.4), transparent),
+        radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.35), transparent);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    h2 { margin: 0 0 4px; font-size: 18px; letter-spacing: 1px; }
+    .subtitle { margin: 0 0 8px; font-size: 12px; color: #cdd6ff; line-height: 1.3; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-auto-rows: 1fr;
+      gap: 8px;
+      height: calc(100% - 36px);
+    }
+    .jar {
+      background: var(--glass);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.03);
+      display: flex;
+      flex-direction: column;
+    }
+    .jar-header { display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 4px; }
+    .jar-title { font-weight: 700; }
+    .jar-items { display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; flex: 1; }
+    .orb { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 6px rgba(0,0,0,0.35), inset 0 0 4px rgba(255,255,255,0.35); animation: drop 360ms ease; }
+    @keyframes drop { 0% { transform: translateY(-14px) scale(0.6); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+  </style>
+</head>
+<body>
+  <h2>How are you feeling?</h2>
+  <p class="subtitle">Type a vibe in chat (e.g., <strong>!chill</strong>) to drop an orb.</p>
+  <div class="grid" id="jarGrid"></div>
+  <script>
+    const feelings = [
+      { id: 'uplifting', label: 'Up', color: '#ff9b6a' },
+      { id: 'melancholic', label: 'Mel', color: '#6aa3ff' },
+      { id: 'energetic', label: 'En', color: '#ff5f6d' },
+      { id: 'chill', label: 'Ch', color: '#58c9b9' },
+      { id: 'nostalgic', label: 'Nos', color: '#d6a2e8' },
+      { id: 'dark', label: 'Dark', color: '#2f2f4f' },
+      { id: 'romantic', label: 'Rom', color: '#ff6fb5' },
+      { id: 'playful', label: 'Play', color: '#ffcd3c' },
+      { id: 'epic', label: 'Epic', color: '#ff914d' },
+      { id: 'dreamy', label: 'Drm', color: '#7de2fc' },
+      { id: 'rebellious', label: 'Reb', color: '#ff3f81' },
+      { id: 'empowering', label: 'Emp', color: '#53d769' }
+    ];
+    const state = new Map();
+    const MAX = 60;
+    const grid = document.getElementById('jarGrid');
+    feelings.forEach(f => {
+      const card = document.createElement('div');
+      card.className = 'jar';
+      card.dataset.jar = f.id;
+      card.innerHTML = `<div class="jar-header"><span class="jar-title">${f.label}</span><span data-count="${f.id}">0</span></div><div class="jar-items" data-items="${f.id}"></div>`;
+      grid.appendChild(card);
+      state.set(f.id, []);
+    });
+    function addOrb(name, username='') {
+      const info = feelings.find(f => f.id === name);
+      if (!info) return;
+      const wrap = document.querySelector(`[data-items="${name}"]`);
+      const orb = document.createElement('div');
+      orb.className = 'orb';
+      orb.style.background = `radial-gradient(circle at 25% 25%, #fff6, ${info.color})`;
+      orb.title = username || info.label;
+      wrap.appendChild(orb);
+      const arr = state.get(name); arr.push(orb); if (arr.length > MAX) { arr.shift()?.remove(); }
+      document.querySelector(`[data-count="${name}"]`).textContent = arr.length;
+    }
+    function clearJar(name) { (state.get(name)||[]).forEach(n=>n.remove()); state.set(name, []); document.querySelector(`[data-count="${name}"]`).textContent = 0; }
+    function handleCommand(cmd) {
+      if (cmd.command === 'add') addOrb(cmd.data, cmd.username);
+      if (cmd.command === 'clear') {
+        if (cmd.data === 'all') feelings.forEach(f => clearJar(f.id));
+        else clearJar(cmd.data);
+      }
+    }
+    window.processChatCommand = (username, msg) => {
+      const key = msg.trim().toLowerCase().replace('!', '');
+      if (feelings.some(f => f.id === key)) addOrb(key, username);
+    };
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'streamCommand' && e.newValue) {
+        const cmd = JSON.parse(e.newValue);
+        if (cmd.widget === 'feelings') handleCommand(cmd);
+      }
+    });
+  </script>
+</body>
+</html>

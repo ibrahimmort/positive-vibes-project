@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trivia Compact</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; width:640px; height:360px; overflow:hidden; background:radial-gradient(circle at 25% 20%, #1c0f32, #08070f 70%); color:#f7f8ff; font-family:'Inter',sans-serif; padding:10px; }
+    h3 { margin:0; font-family:'Bungee'; letter-spacing:1px; }
+    .subtitle { margin:2px 0 8px; font-size:12px; color:#cbd1ff; }
+    .panel { background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:10px; height:100%; display:flex; flex-direction:column; gap:8px; box-shadow:0 20px 50px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04); backdrop-filter: blur(6px); }
+    .topics { display:grid; grid-template-columns: repeat(2,1fr); gap:6px; }
+    .topic { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:6px; font-size:12px; min-height:56px; position:relative; overflow:hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02); }
+    .topic strong { display:block; font-size:12px; }
+    .topic .vote { position:absolute; top:6px; right:6px; background:#9efcff; color:#000; border-radius:6px; padding:2px 6px; font-weight:700; font-size:11px; box-shadow:0 6px 14px rgba(0,0,0,0.25); }
+    button { background:linear-gradient(130deg,#ff6f91,#ffcc70); border:none; color:#0b0616; padding:6px 10px; border-radius:10px; font-weight:800; cursor:pointer; font-size:12px; box-shadow:0 10px 25px rgba(0,0,0,0.35); text-transform: uppercase; letter-spacing:0.4px; }
+    button:disabled { opacity:0.6; }
+    .controls { display:grid; grid-template-columns: repeat(3,1fr); gap:6px; }
+    .question { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:8px; flex:1; display:flex; flex-direction:column; gap:6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03); }
+    .choices { display:grid; grid-template-columns: repeat(2,1fr); gap:6px; font-size:12px; }
+    .choice { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:6px; transition: transform 160ms ease, box-shadow 160ms ease; }
+    .choice.correct { background:#2ad196; color:#04120c; box-shadow:0 8px 18px rgba(42,209,150,0.4); }
+    .choice.wrong { opacity:0.5; }
+    #leaderboard { display:none; grid-template-columns: repeat(2,1fr); gap:6px; font-size:12px; }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h3>Trivia Arena</h3>
+    <p class="subtitle">Vote with <strong>!vote 1-8</strong> then answer with <strong>!a-!d</strong>. Reveal jumps to the next question.</p>
+    <div class="controls">
+      <button id="generateTopics">Topics</button>
+      <button id="startGame" disabled>Start</button>
+      <button id="reveal" disabled>Reveal</button>
+      <button id="playAgain" disabled>Again</button>
+      <span id="statusText" style="font-size:11px; align-self:center;">Waiting...</span>
+    </div>
+    <div id="topicsContainer" class="topics"></div>
+    <div id="questionArea" class="question"></div>
+    <div id="leaderboard"></div>
+  </div>
+  <script>
+    const statusText=document.getElementById('statusText');
+    const topicsContainer=document.getElementById('topicsContainer');
+    const questionArea=document.getElementById('questionArea');
+    const leaderboard=document.getElementById('leaderboard');
+    const btnTopics=document.getElementById('generateTopics');
+    const btnStart=document.getElementById('startGame');
+    const btnReveal=document.getElementById('reveal');
+    const btnAgain=document.getElementById('playAgain');
+
+    let topics=[]; let votes={}; let questions=[]; let current=0; let answers=new Map(); let scores=new Map(); let topicsReady=false; let questionsReady=false; let pendingStart=false; let revealed=false; let gameActive=false;
+
+    const fallbackTopicsPool=[
+      {title:'Indie Worlds',blurb:'Beloved hidden gems'}, {title:'Cosmic Facts',blurb:'Space oddities'}, {title:'Retro Games',blurb:'8-bit legends'}, {title:'Urban Legends',blurb:'Myths IRL'}, {title:'Soundtracks',blurb:'Iconic scores'}, {title:'Anime Trivia',blurb:'Openings & arcs'}, {title:'Food Science',blurb:'Kitchen chemistry'}, {title:'Wild Tech',blurb:'Future gadgets'}, {title:'Festival Anthems',blurb:'Crowd-pleasers'}, {title:'Mythology Remix',blurb:'Legends in pop'}, {title:'Cozy Games',blurb:'Wholesome hits'}, {title:'Space Tech',blurb:'Future rockets'}
+    ];
+    const shuffle=arr=>{ const c=[...arr]; for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [c[i],c[j]]=[c[j],c[i]];} return c; };
+    const fallbackTopics=()=>shuffle(fallbackTopicsPool).slice(0,8);
+
+    async function generateTopics(){
+      statusText.textContent='Generating...'; topicsReady=false; btnStart.disabled=true; btnTopics.disabled=true;
+      try{
+        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:'Create 8 trivia topics with short blurbs as JSON {topics:[{title,blurb}]}' }]})});
+        const data=await resp.json();
+        const text=data?.content?.[0]?.text||''; const parsed=JSON.parse(text||'{}').topics;
+        topics=Array.isArray(parsed)&&parsed.length===8?parsed:fallbackTopics();
+      }catch(e){ topics=fallbackTopics(); }
+      votes={}; renderTopics(); topicsReady=true; btnStart.disabled=false; btnTopics.disabled=false; statusText.textContent='Vote !vote 1-8';
+      if(pendingStart){ pendingStart=false; start(); }
+    }
+
+    function renderTopics(){ topicsContainer.innerHTML=''; topics.forEach((t,i)=>{ const div=document.createElement('div'); div.className='topic'; div.innerHTML=`<strong>${i+1}. ${t.title}</strong><div>${t.blurb||''}</div><div class="vote">${votes[i+1]||0}</div>`; topicsContainer.appendChild(div); }); }
+
+    async function generateQuestions(topic){
+      statusText.textContent='Building questions...'; btnReveal.disabled=true; questionsReady=false; revealed=false; gameActive=false; leaderboard.style.display='none'; leaderboard.innerHTML='';
+      try{
+        const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,messages:[{role:'user',content:`Create 10 MCQ for ${topic.title||topic} with JSON {questions:[{q,options:[A,B,C,D],answer}]}`}]} )});
+        const data=await resp.json(); const text=data?.content?.[0]?.text||''; const parsed=JSON.parse(text||'{}').questions;
+        if(Array.isArray(parsed)&&parsed.length){ questions=parsed.map((q,i)=>({q:q.q||q.question,options:q.options||q.choices,answer:(q.answer||'A').toString().trim().toUpperCase()})); }
+        else throw new Error('bad questions');
+      }catch(e){ questions=fallbackQuestions(topic.title||topic); }
+      current=0; answers=new Map(); scores=new Map(); questionsReady=true; revealed=false; gameActive=true; renderQuestion(); statusText.textContent='Answer !a !b !c !d'; btnReveal.disabled=false; btnAgain.disabled=true;
+    }
+
+    const fallbackQuestions=(topic)=>Array.from({length:10}).map((_,i)=>({q:`${topic} Q${i+1}?`,options:['A','B','C','D'],answer:['A','B','C','D'][i%4]}));
+
+    function renderQuestion(){
+      questionArea.innerHTML=''; const q=questions[current]; if(!q){ return finish(); }
+      revealed=false;
+      questionArea.innerHTML=`<div style="font-weight:700;">Q${current+1}: ${q.q}</div>`; const wrap=document.createElement('div'); wrap.className='choices'; ['A','B','C','D'].forEach((l,i)=>{ const c=document.createElement('div'); c.className='choice'; c.dataset.choice=l; c.innerHTML=`<strong>${l}</strong> ${q.options?.[i]||''}`; wrap.appendChild(c); }); questionArea.appendChild(wrap);
+    }
+
+    function reveal(){
+      if(revealed||!gameActive) return; const q=questions[current]; if(!q) return; lock(); document.querySelectorAll('.choice').forEach(el=>{ if(el.dataset.choice===q.answer) el.classList.add('correct'); else el.classList.add('wrong'); }); btnReveal.disabled=true; revealed=true;
+      setTimeout(()=>{ current+=1; if(current>=questions.length) return finish(); btnReveal.disabled=false; renderQuestion(); },1300);
+    }
+
+    function finish(){
+      gameActive=false; const sorted=[...scores.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8); leaderboard.style.display='grid'; leaderboard.innerHTML=sorted.map(([u,s],i)=>`<div>${i+1}. ${u} - ${s}pt</div>`).join(''); btnAgain.disabled=false; btnReveal.disabled=true; btnStart.disabled=false; statusText.textContent='Trivia complete!';
+    }
+
+    function vote(username,message){ const m=message.trim().toLowerCase(); if(!m.startsWith('!vote')) return; const n=parseInt(m.split(' ')[1],10); if(n<1||n>8||Number.isNaN(n)) return; votes[n]=(votes[n]||0)+1; renderTopics(); }
+    const winningIndex=()=>{ if(!topics.length) return 0; const sorted=Object.entries(votes).sort((a,b)=>b[1]-a[1]); if(!sorted.length) return 0; const top=sorted[0][1]; const leaders=sorted.filter(([,s])=>s===top).map(([i])=>Number(i)-1); return leaders[Math.floor(Math.random()*leaders.length)]??0; };
+    function answer(username,message){ const key=message.trim().toUpperCase(); if(!['!A','!B','!C','!D'].includes(key)||!questionsReady||!gameActive||revealed) return; answers.set(username,key.slice(1)); }
+    function lock(){ const q=questions[current]; if(!q) return; answers.forEach((c,u)=>{ if(c===q.answer) scores.set(u,(scores.get(u)||0)+1); }); answers.clear(); }
+
+    window.processChatCommand=(u,m)=>{ vote(u,m); answer(u,m); };
+    window.addEventListener('storage',(e)=>{ if(e.key!=='streamCommand'||!e.newValue) return; const cmd=JSON.parse(e.newValue);if(cmd.widget!=='trivia') return; if(cmd.command==='topics') generateTopics(); if(cmd.command==='vote') vote(cmd.username||'viewer',`!vote ${cmd.data}`); if(cmd.command==='answer') answer(cmd.username||'viewer',`!${cmd.data}`); if(cmd.command==='reveal'||cmd.command==='next'){ reveal(); } if(cmd.command==='start') { pendingStart=true; if(topicsReady){ pendingStart=false; start(); } } });
+
+    btnTopics.onclick=generateTopics; function start(){ if(!topicsReady){ pendingStart=true; return alert('Topics loading'); } const idx=winningIndex(); const topic=topics[idx]||topics[0]; statusText.textContent=`Starting: ${topic.title}`; generateQuestions(topic); btnStart.disabled=true; }
+    btnStart.onclick=start; btnReveal.onclick=reveal; btnAgain.onclick=()=>{ leaderboard.style.display='none'; leaderboard.innerHTML=''; btnAgain.disabled=true; statusText.textContent='Waiting...'; generateTopics(); };
+    generateTopics();
+  </script>
+</body>
+</html>

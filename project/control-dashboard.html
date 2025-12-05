@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stream Control Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:'Inter',sans-serif; background:#0b0d18; color:#f3f6ff; padding:20px; display:grid; grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:12px; }
+    h2 { margin:0 0 10px; letter-spacing:1px; }
+    .panel { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:12px; box-shadow:0 12px 32px rgba(0,0,0,0.45); }
+    button { background: linear-gradient(120deg,#7de2fc,#ff9b6a); border:none; color:#04101b; font-weight:800; padding:8px 12px; border-radius:10px; cursor:pointer; box-shadow:0 6px 12px rgba(0,0,0,0.35); margin:4px 4px 4px 0; }
+    .section { display:flex; flex-wrap:wrap; gap:6px; }
+    input, select { padding:6px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color:#fff; }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h2>Feelings Control</h2>
+    <div class="section">
+      <select id="feelingsSelect">
+        <option value="uplifting">Uplifting</option><option value="melancholic">Melancholic</option><option value="energetic">Energetic</option><option value="chill">Chill</option><option value="nostalgic">Nostalgic</option><option value="dark">Dark</option><option value="romantic">Romantic</option><option value="playful">Playful</option><option value="epic">Epic</option><option value="dreamy">Dreamy</option><option value="rebellious">Rebellious</option><option value="empowering">Empowering</option>
+      </select>
+      <button onclick="sendCommand('feelings','add',getValue('feelingsSelect'))">Add</button>
+      <button onclick="rain('feelings')">Rain 12</button>
+      <button onclick="sendCommand('feelings','clear','all')">Clear All</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Zodiac Control</h2>
+    <div class="section">
+      <select id="zodiacSelect">
+        <option value="aries">Aries</option><option value="taurus">Taurus</option><option value="gemini">Gemini</option><option value="cancer">Cancer</option><option value="leo">Leo</option><option value="virgo">Virgo</option><option value="libra">Libra</option><option value="scorpio">Scorpio</option><option value="sagittarius">Sagittarius</option><option value="capricorn">Capricorn</option><option value="aquarius">Aquarius</option><option value="pisces">Pisces</option>
+      </select>
+      <button onclick="sendCommand('zodiac','add',getValue('zodiacSelect'))">Add</button>
+      <button onclick="rain('zodiac')">Rain 12</button>
+      <button onclick="sendCommand('zodiac','clear','all')">Clear All</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Creative Roles</h2>
+    <div class="section">
+      <select id="rolesSelect">
+        <option value="hitmaker">Hitmaker</option><option value="listener">Listener</option><option value="author">Author</option><option value="voiceartist">Voice Artist</option><option value="reader">Reader</option><option value="artist">Artist</option>
+      </select>
+      <button onclick="sendCommand('roles','add',getValue('rolesSelect'))">Add</button>
+      <button onclick="rain('roles',8,6)">Rain 10</button>
+      <button onclick="sendCommand('roles','clear','all')">Clear All</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Trivia Controls</h2>
+    <div class="section">
+      <button onclick="sendCommand('trivia','topics')">Generate Topics</button>
+      <button onclick="sendCommand('trivia','start')">Start Game</button>
+      <button onclick="sendCommand('trivia','reveal')">Reveal / Advance</button>
+    </div>
+    <div class="section">
+      <input id="voteNum" type="number" min="1" max="8" value="1" style="width:80px;">
+      <button onclick="sendCommand('trivia','vote',document.getElementById('voteNum').value)">Send Vote</button>
+      <select id="answerLetter"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+      <button onclick="sendCommand('trivia','answer',getValue('answerLetter'))">Send Answer</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Quick Actions</h2>
+    <div class="section">
+      <button onclick="demoAll()">Test All Widgets</button>
+      <button onclick="localStorage.clear(); alert('localStorage cleared');">Clear Storage</button>
+    </div>
+  </div>
+
+<script>
+  const feelingsList = ['uplifting','melancholic','energetic','chill','nostalgic','dark','romantic','playful','epic','dreamy','rebellious','empowering'];
+  const zodiacList = ['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'];
+  const rolesList = ['hitmaker','listener','author','voiceartist','reader','artist'];
+
+  function getValue(id){ return document.getElementById(id).value; }
+
+  function sendCommand(widget, command, data='', username='dashboard') {
+    localStorage.setItem('streamCommand', JSON.stringify({ widget, command, data, username, timestamp: Date.now() }));
+  }
+
+  function rain(widget, amount=12, max=12){
+    const map = { feelings: feelingsList, zodiac: zodiacList, roles: rolesList };
+    const list = map[widget];
+    for (let i=0;i<amount;i++) {
+      const pick = list[Math.floor(Math.random()*list.length)];
+      sendCommand(widget,'add',pick,`rain-${i}`);
+    }
+  }
+
+  function demoAll(){
+    rain('feelings',15);
+    rain('zodiac',15);
+    rain('roles',10);
+    sendCommand('trivia','topics');
+    setTimeout(()=>sendCommand('trivia','start'), 1000);
+    setTimeout(()=>sendCommand('trivia','vote',1), 1200);
+    setTimeout(()=>sendCommand('trivia','answer','A'), 2000);
+    setTimeout(()=>sendCommand('trivia','reveal'), 2600);
+    setTimeout(()=>sendCommand('trivia','answer','B'), 4200);
+    setTimeout(()=>sendCommand('trivia','reveal'), 4700);
+  }
+</script>
+</body>
+</html>
