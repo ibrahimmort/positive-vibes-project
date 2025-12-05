@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Trivia Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; background: radial-gradient(circle at 30% 20%, #1a0f3a, #0a0718 60%); color:#f8f9ff; font-family:'Inter',sans-serif; padding:24px; display:flex; flex-direction:column; align-items:center; gap:16px; }
+    h1 { margin:0; font-family:'Bungee', cursive; letter-spacing:1px; text-shadow:0 6px 20px rgba(0,0,0,0.55); }
+    .panel { width:min(1100px,100%); background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border:1px solid rgba(255,255,255,0.15); border-radius:16px; padding:18px; box-shadow:0 20px 50px rgba(0,0,0,0.45); }
+    .topics { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:10px; }
+    .topic { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:10px; min-height:80px; position:relative; overflow:hidden; }
+    .topic strong { display:block; font-family:'Bungee'; font-size:15px; margin-bottom:6px; }
+    .topic .vote { position:absolute; top:10px; right:10px; background:#9efcff; color:#001018; border-radius:8px; padding:4px 8px; font-weight:700; }
+    .controls { display:flex; gap:12px; align-items:center; margin:12px 0; flex-wrap:wrap; }
+    button { background: linear-gradient(120deg, #ff6f91, #ffc15e); border:none; color:#0b0616; font-weight:800; padding:10px 16px; border-radius:10px; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,0.35); font-family:'Inter'; letter-spacing:0.5px; }
+    button:disabled { opacity:0.6; cursor:not-allowed; }
+    .question-card { background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; margin-bottom:10px; }
+    .choices { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:8px; margin-top:8px; }
+    .choice { padding:12px; border-radius:10px; background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); cursor:pointer; transition: all 200ms ease; }
+    .choice:hover { background: rgba(255,255,255,0.1); }
+    .choice.correct { background: #2ad196; color:#04120c; box-shadow:0 0 16px rgba(42,209,150,0.6); }
+    .choice.wrong { opacity:0.55; }
+    .status { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .leaderboard { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:8px; }
+    .leader { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:10px; }
+  </style>
+</head>
+<body>
+  <h1>AI Trivia Show</h1>
+  <div class="panel">
+    <div class="controls">
+      <button id="generateTopics">Generate Topics</button>
+      <button id="startGame" disabled>Start (after topics ready)</button>
+      <button id="reveal" disabled>Reveal Answer</button>
+      <button id="next" disabled>Next Question</button>
+      <button id="playAgain" disabled>Play Again</button>
+      <span id="statusText">Waiting for topics...</span>
+    </div>
+    <div id="topicsContainer" class="topics"></div>
+    <div id="questionArea"></div>
+    <div id="leaderboard" style="display:none;"></div>
+  </div>
+<script>
+  const statusText = document.getElementById('statusText');
+  const topicsContainer = document.getElementById('topicsContainer');
+  const questionArea = document.getElementById('questionArea');
+  const leaderboardEl = document.getElementById('leaderboard');
+  const btnGenerate = document.getElementById('generateTopics');
+  const btnStart = document.getElementById('startGame');
+  const btnReveal = document.getElementById('reveal');
+  const btnNext = document.getElementById('next');
+  const btnPlayAgain = document.getElementById('playAgain');
+
+  let topics = [];
+  let votes = {};
+  let questions = [];
+  let current = 0;
+  let answers = new Map();
+  let scores = new Map();
+  let topicsReady = false;
+  let questionsReady = false;
+  let pendingStart = false;
+
+  const fallbackTopicsPool = [
+    { title: 'Synthwave History', blurb: 'From 80s cinema to modern EDM' },
+    { title: 'Space Oddities', blurb: 'Curious facts about the cosmos' },
+    { title: 'Mythology Remix', blurb: 'Legends retold in pop culture' },
+    { title: 'Indie Game Worlds', blurb: 'Tiny studios, huge adventures' },
+    { title: 'Coffee Science', blurb: 'Brewing chemistry & caffeine lore' },
+    { title: 'Wild Instruments', blurb: 'Music made with unexpected objects' },
+    { title: 'Time Travel Movies', blurb: 'Paradoxes and plot twists' },
+    { title: 'Ocean Mysteries', blurb: 'Strange creatures & deep sea tech' },
+    { title: 'Retro Anime Trivia', blurb: 'Openings, arcs, and mecha' },
+    { title: 'Food Science', blurb: 'Kitchen chemistry and flavor hacks' },
+    { title: 'Urban Legends', blurb: 'Myths that turned out true-ish' },
+    { title: 'Festival Anthems', blurb: 'Crowd-pleasers across decades' },
+  ];
+
+  function shuffle(arr) {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  const fallbackTopics = () => shuffle(fallbackTopicsPool).slice(0, 8);
+
+  async function generateTopics() {
+    statusText.textContent = 'Generating topics...';
+    btnStart.disabled = true;
+    btnGenerate.disabled = true;
+    topicsReady = false;
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 400,
+          messages: [{ role: 'user', content: 'Create 8 punchy trivia topics with one-sentence blurb. Return JSON array under key topics.' }]
+        })
+      });
+      const data = await resp.json();
+      const text = data?.content?.[0]?.text || '';
+      const parsed = JSON.parse(text || '{}').topics;
+      topics = Array.isArray(parsed) && parsed.length === 8 ? parsed : fallbackTopics();
+    } catch (e) {
+      console.warn('Topic generation fallback', e);
+      topics = fallbackTopics();
+    }
+    votes = {};
+    renderTopics();
+    topicsReady = true;
+    btnStart.disabled = false;
+    btnGenerate.disabled = false;
+    statusText.textContent = 'Topics ready! Chat vote with !vote 1-8';
+    if (pendingStart) {
+      pendingStart = false;
+      startGame();
+    }
+  }
+
+  function renderTopics() {
+    topicsContainer.innerHTML = '';
+    topics.forEach((t, idx) => {
+      const card = document.createElement('div');
+      card.className = 'topic';
+      card.innerHTML = `<strong>${idx+1}. ${t.title || t.name}</strong><div>${t.blurb || t.description || ''}</div><div class="vote">${votes[idx+1]||0} votes</div>`;
+      topicsContainer.appendChild(card);
+    });
+  }
+
+  async function generateQuestions(topicTitle) {
+    statusText.textContent = `Generating questions for ${topicTitle}...`;
+    btnReveal.disabled = true;
+    btnNext.disabled = true;
+    btnStart.disabled = true;
+    questionsReady = false;
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 900,
+          messages: [{ role: 'user', content: `Create 10 multiple choice questions about ${topicTitle}. Return JSON {questions:[{q, options:[A,B,C,D], answer}]}` }]
+        })
+      });
+      const data = await resp.json();
+      const text = data?.content?.[0]?.text || '';
+      const parsed = JSON.parse(text || '{}').questions;
+      if (Array.isArray(parsed) && parsed.length) {
+        questions = parsed.map((q,i) => ({
+          q: q.q || q.question,
+          options: q.options || q.choices,
+          answer: (q.answer || 'A').toString().trim().toUpperCase(),
+          idx: i
+        }));
+      } else {
+        throw new Error('Invalid question payload');
+      }
+    } catch (e) {
+      console.warn('Question generation fallback', e);
+      questions = fallbackQuestions(topicTitle);
+    }
+    current = 0;
+    answers = new Map();
+    scores = new Map();
+    questionsReady = true;
+    renderQuestion();
+    btnReveal.disabled = false;
+    btnNext.disabled = false;
+    statusText.textContent = 'Game live! Chat answer with !a !b !c !d';
+  }
+
+  function fallbackQuestions(topicTitle) {
+    return Array.from({ length: 10 }).map((_,i) => ({
+      q: `${topicTitle} Question ${i+1}?`,
+      options: ['Choice A', 'Choice B', 'Choice C', 'Choice D'],
+      answer: ['A','B','C','D'][i%4],
+      idx: i
+    }));
+  }
+
+  function renderQuestion() {
+    questionArea.innerHTML = '';
+    const q = questions[current];
+    if (!q) return finishGame();
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.innerHTML = `<div class="status"><div>Q${current+1}/10: ${q.q}</div><div id="timer"></div></div>`;
+    const choices = document.createElement('div');
+    choices.className = 'choices';
+    ['A','B','C','D'].forEach((letter, idx) => {
+      const choice = document.createElement('div');
+      choice.className = 'choice';
+      choice.dataset.choice = letter;
+      choice.innerHTML = `<strong>${letter}</strong> ${q.options?.[idx] || ''}`;
+      choices.appendChild(choice);
+    });
+    card.appendChild(choices);
+    questionArea.appendChild(card);
+  }
+
+  function revealAnswer() {
+    const q = questions[current];
+    if (!q) return;
+    document.querySelectorAll('.choice').forEach(el => {
+      if (el.dataset.choice === q.answer) el.classList.add('correct');
+      else el.classList.add('wrong');
+    });
+    btnReveal.disabled = true;
+  }
+
+  function nextQuestion() {
+    if (!questionsReady) return;
+    current += 1;
+    if (current >= questions.length) { finishGame(); return; }
+    btnReveal.disabled = false;
+    renderQuestion();
+  }
+
+  function finishGame() {
+    questionArea.innerHTML = '<h3>Leaderboard</h3>';
+    const sorted = [...scores.entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+    leaderboardEl.style.display = 'grid';
+    leaderboardEl.className = 'leaderboard';
+    leaderboardEl.innerHTML = sorted.map(([user, pts], i) => `<div class="leader">${i+1}. ${user} - ${pts} pts</div>`).join('');
+    btnNext.disabled = true;
+    btnReveal.disabled = true;
+    btnPlayAgain.disabled = false;
+    statusText.textContent = 'Round complete!';
+  }
+
+  btnGenerate.onclick = generateTopics;
+  async function startGame() {
+    if (!topicsReady) { alert('Topics still generating.'); return; }
+    const winningIndex = getWinningTopicIndex();
+    const topicTitle = topics[winningIndex]?.title || topics[winningIndex]?.name || topics[0].title;
+    statusText.textContent = `Starting round: ${topicTitle}`;
+    await generateQuestions(topicTitle);
+  }
+  btnStart.onclick = startGame;
+  btnReveal.onclick = revealAnswer;
+  btnNext.onclick = nextQuestion;
+  btnPlayAgain.onclick = () => {
+    leaderboardEl.style.display = 'none';
+    questionArea.innerHTML = '';
+    btnPlayAgain.disabled = true;
+    generateTopics();
+  };
+
+  function registerVote(username, message) {
+    const m = message.trim().toLowerCase();
+    if (!m.startsWith('!vote')) return;
+    const num = parseInt(m.split(' ')[1], 10);
+    if (Number.isNaN(num) || num < 1 || num > 8) return;
+    votes[num] = (votes[num] || 0) + 1;
+    renderTopics();
+  }
+
+  function registerAnswer(username, message) {
+    const key = message.trim().toUpperCase();
+    if (!['!A','!B','!C','!D'].includes(key)) return;
+    if (!questionsReady) return;
+    answers.set(username, key.slice(1));
+  }
+
+  function lockAnswers() {
+    const q = questions[current];
+    if (!q) return;
+    answers.forEach((choice, user) => {
+      if (choice === q.answer) scores.set(user, (scores.get(user)||0)+1);
+    });
+    answers.clear();
+  }
+
+  // Public chat API
+  window.processChatCommand = (username, message) => {
+    registerVote(username, message);
+    registerAnswer(username, message);
+  };
+
+  function getWinningTopicIndex() {
+    if (!topics.length) return 0;
+    const sorted = Object.entries(votes).sort((a, b) => b[1] - a[1]);
+    if (!sorted.length) return Math.floor(Math.random() * topics.length);
+    const topScore = sorted[0][1];
+    const leaders = sorted.filter(([, score]) => score === topScore).map(([idx]) => Number(idx) - 1);
+    return leaders[Math.floor(Math.random() * leaders.length)] ?? 0;
+  }
+
+  async function requestStart() {
+    pendingStart = true;
+    if (topicsReady) {
+      pendingStart = false;
+      await startGame();
+    }
+  }
+
+  // LocalStorage controls
+  window.addEventListener('storage', (e) => {
+    if (e.key !== 'streamCommand' || !e.newValue) return;
+    const cmd = JSON.parse(e.newValue);
+    if (cmd.widget !== 'trivia') return;
+    if (cmd.command === 'vote') registerVote(cmd.username || 'viewer', `!vote ${cmd.data}`);
+    if (cmd.command === 'answer') registerAnswer(cmd.username || 'viewer', `!${cmd.data}`);
+    if (cmd.command === 'reveal') { lockAnswers(); revealAnswer(); }
+    if (cmd.command === 'next') { lockAnswers(); nextQuestion(); }
+    if (cmd.command === 'topics') generateTopics();
+    if (cmd.command === 'start') requestStart();
+  });
+
+  // start by generating topics
+  generateTopics();
+</script>
+</body>
+</html>

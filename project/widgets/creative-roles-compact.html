@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Creative Roles - Compact</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; width:640px; height:360px; overflow:hidden; background:linear-gradient(120deg,#0c0e15,#10141f); color:#f3f6ff; font-family:'Inter',sans-serif; padding:12px; }
+    h2 { margin:0 0 6px; letter-spacing:1px; }
+    .grid { display:grid; grid-template-columns: repeat(3,1fr); grid-auto-rows:1fr; gap:10px; height: calc(100% - 26px); }
+    .jar { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:8px; box-shadow:0 10px 28px rgba(0,0,0,0.45); display:flex; flex-direction:column; }
+    .jar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:12px; }
+    .jar-title { display:flex; align-items:center; gap:6px; font-weight:700; }
+    .jar-items { display:flex; flex-wrap:wrap; gap:6px; align-content:flex-start; flex:1; }
+    .orb { width:20px; height:20px; border-radius:50%; display:grid; place-items:center; font-size:12px; box-shadow:0 0 10px rgba(0,0,0,0.45), inset 0 0 5px rgba(255,255,255,0.4); animation: drop 320ms ease; }
+    @keyframes drop { 0%{transform:translateY(-16px) scale(0.6);opacity:0;} 100%{transform:translateY(0) scale(1);opacity:1;} }
+  </style>
+</head>
+<body>
+  <h2>Creative Roles</h2>
+  <div class="grid" id="grid"></div>
+  <script>
+    const roles=[
+      {id:'hitmaker', icon:'🎹', color:'#ff9b6a'},
+      {id:'listener', icon:'🎧', color:'#7de2fc'},
+      {id:'author', icon:'📖', color:'#ffd166'},
+      {id:'voiceartist', icon:'🎤', color:'#ff6f91'},
+      {id:'reader', icon:'👀', color:'#58c9b9'},
+      {id:'artist', icon:'🎨', color:'#d6a2e8'},
+    ];
+    const state=new Map();
+    const MAX=60;
+    const grid=document.getElementById('grid');
+    roles.forEach(r=>{
+      const card=document.createElement('div');
+      card.className='jar'; card.dataset.jar=r.id;
+      card.innerHTML=`<div class="jar-header"><div class="jar-title"><span>${r.icon}</span>${r.id}</div><span data-count="${r.id}">0</span></div><div class="jar-items" data-items="${r.id}"></div>`;
+      grid.appendChild(card); state.set(r.id, []);
+    });
+    function addOrb(id, username=''){
+      const info=roles.find(r=>r.id===id); if(!info) return;
+      const wrap=document.querySelector(`[data-items="${id}"]`);
+      const orb=document.createElement('div'); orb.className='orb'; orb.style.background=`radial-gradient(circle at 25% 25%, #fff7, ${info.color})`; orb.textContent=info.icon; orb.title=username;
+      wrap.appendChild(orb);
+      const arr=state.get(id); arr.push(orb); if(arr.length>MAX){arr.shift()?.remove();}
+      document.querySelector(`[data-count="${id}"]`).textContent=arr.length;
+    }
+    function clearJar(id){(state.get(id)||[]).forEach(n=>n.remove()); state.set(id, []); document.querySelector(`[data-count="${id}"]`).textContent=0;}
+    function handleCommand(cmd){ if(cmd.command==='add') addOrb(cmd.data, cmd.username); if(cmd.command==='clear'){ if(cmd.data==='all') roles.forEach(r=>clearJar(r.id)); else clearJar(cmd.data);} }
+    window.processChatCommand=(u,m)=>{ const key=m.trim().toLowerCase().replace('!',''); if(roles.some(r=>r.id===key)) addOrb(key,u); };
+    window.addEventListener('storage',(e)=>{ if(e.key==='streamCommand' && e.newValue){ const cmd=JSON.parse(e.newValue); if(cmd.widget==='roles') handleCommand(cmd);} });
+  </script>
+</body>
+</html>

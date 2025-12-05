@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Zodiac Jars - Compact</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; width:640px; height:360px; overflow:hidden; background: radial-gradient(circle at 40% 20%, #0c1435, #060818 70%); color:#e6f2ff; font-family:'Inter',sans-serif; padding:12px; }
+    h2 { margin:0 0 6px; letter-spacing:1px; }
+    .grid { display:grid; grid-template-columns: repeat(6,1fr); grid-auto-rows: 1fr; gap:8px; height: calc(100% - 26px); }
+    .jar { background: rgba(255,255,255,0.05); border:1px solid rgba(125,226,252,0.3); border-radius:12px; padding:6px; box-shadow:0 6px 20px rgba(0,0,0,0.4); display:flex; flex-direction:column; }
+    .jar-header { display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:2px; }
+    .jar-items { display:flex; flex-wrap:wrap; gap:4px; align-content:flex-start; flex:1; }
+    .star { width:14px; height:14px; border-radius:50%; background:#7de2fc; color:#04101b; display:grid; place-items:center; font-size:10px; font-weight:700; box-shadow:0 0 8px rgba(125,226,252,0.7); animation: pop 320ms ease; }
+    @keyframes pop { 0%{transform:scale(0.4);opacity:0;} 100%{transform:scale(1);opacity:1;} }
+  </style>
+</head>
+<body>
+  <h2>Zodiac</h2>
+  <div class="grid" id="jarGrid"></div>
+  <script>
+    const signs = [
+      { id:'aries', icon:'♈', color:'#ff785a'}, { id:'taurus', icon:'♉', color:'#66d17d'}, { id:'gemini', icon:'♊', color:'#ffd166'},
+      { id:'cancer', icon:'♋', color:'#7de2fc'}, { id:'leo', icon:'♌', color:'#ffb347'}, { id:'virgo', icon:'♍', color:'#b8f1b0'},
+      { id:'libra', icon:'♎', color:'#f4a6ff'}, { id:'scorpio', icon:'♏', color:'#ff6f91'}, { id:'sagittarius', icon:'♐', color:'#ffe066'},
+      { id:'capricorn', icon:'♑', color:'#c3cad9'}, { id:'aquarius', icon:'♒', color:'#7fd8ff'}, { id:'pisces', icon:'♓', color:'#6fc2ff'}
+    ];
+    const state = new Map();
+    const MAX = 60;
+    const grid = document.getElementById('jarGrid');
+    signs.forEach(s=>{
+      const card=document.createElement('div');
+      card.className='jar';
+      card.dataset.jar=s.id;
+      card.innerHTML=`<div class="jar-header"><span>${s.icon}</span><span data-count="${s.id}">0</span></div><div class="jar-items" data-items="${s.id}"></div>`;
+      grid.appendChild(card);
+      state.set(s.id, []);
+    });
+    function addStar(id, username='') {
+      const info=signs.find(s=>s.id===id); if(!info) return;
+      const wrap=document.querySelector(`[data-items="${id}"]`);
+      const star=document.createElement('div');
+      star.className='star'; star.style.background=`radial-gradient(circle at 50% 50%, #fff8, ${info.color})`; star.textContent=info.icon; star.title=username;
+      wrap.appendChild(star);
+      const arr=state.get(id); arr.push(star); if(arr.length>MAX){arr.shift()?.remove();}
+      document.querySelector(`[data-count="${id}"]`).textContent = arr.length;
+    }
+    function clearJar(id){(state.get(id)||[]).forEach(n=>n.remove()); state.set(id,[]); document.querySelector(`[data-count="${id}"]`).textContent=0;}
+    function handleCommand(cmd){ if(cmd.command==='add') addStar(cmd.data, cmd.username); if(cmd.command==='clear'){ if(cmd.data==='all') signs.forEach(s=>clearJar(s.id)); else clearJar(cmd.data);} }
+    window.processChatCommand=(u,m)=>{ const key=m.trim().toLowerCase().replace('!',''); if(signs.some(s=>s.id===key)) addStar(key,u);} ;
+    window.addEventListener('storage',(e)=>{ if(e.key==='streamCommand' && e.newValue){ const cmd=JSON.parse(e.newValue); if(cmd.widget==='zodiac') handleCommand(cmd);} });
+  </script>
+</body>
+</html>
