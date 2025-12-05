@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stream Grid Overlay</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; background:#000; display:grid; place-items:center; width:100vw; height:100vh; }
+    .grid { display:grid; grid-template-columns: repeat(3, 640px); grid-template-rows: repeat(3, 360px); gap:8px; }
+    iframe { width:640px; height:360px; border:none; background:transparent; }
+    .empty { width:640px; height:360px; border:1px dashed rgba(255,255,255,0.1); background:rgba(255,255,255,0.02); }
+    @media (max-width:1950px) { .grid { transform: scale(calc(100vw / 1950)); transform-origin: top left; } }
+  </style>
+</head>
+<body>
+  <div class="grid">
+    <iframe src="widgets/feelings-jars-compact.html" title="Feelings"></iframe>
+    <iframe src="widgets/zodiac-jars-compact.html" title="Zodiac"></iframe>
+    <iframe src="widgets/creative-roles-compact.html" title="Roles"></iframe>
+    <iframe src="widgets/trivia-game-compact.html" title="Trivia" style="grid-column:1 / span 1;"></iframe>
+    <div class="empty"></div>
+    <div class="empty"></div>
+    <div class="empty"></div>
+    <div class="empty"></div>
+    <div class="empty"></div>
+  </div>
+</body>
+</html>
