@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Zodiac Jars</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: radial-gradient(circle at 50% 20%, #15192d, #05060f 70%);
+      --glass: rgba(255,255,255,0.05);
+      --accent: #7de2fc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'Inter', system-ui, sans-serif;
+      color: #eef1ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      gap: 18px;
+    }
+    h1 { margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; width: min(1200px, 100%); }
+    .jar { position: relative; background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); border: 1px solid rgba(125,226,252,0.35); border-radius: 16px; padding: 12px; overflow: hidden; backdrop-filter: blur(6px); box-shadow: 0 14px 36px rgba(0,0,0,0.45); }
+    .jar::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 20% 20%, rgba(125,226,252,0.2), transparent 40%); pointer-events: none; }
+    .jar-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .jar-title { font-weight: 700; font-size: 16px; letter-spacing: 0.5px; }
+    .dates { font-size: 12px; opacity: 0.8; }
+    .jar-items { display: flex; flex-wrap: wrap; gap: 6px; min-height: 96px; }
+    .star { width: 22px; height: 22px; border-radius: 50%; background: #7de2fc; color: #031221; display: grid; place-items: center; font-size: 12px; font-weight: 700; box-shadow: 0 0 14px rgba(125,226,252,0.8), inset 0 0 6px rgba(255,255,255,0.35); animation: twinkle 500ms ease; }
+    @keyframes twinkle { 0% { transform: scale(0.4); opacity: 0; } 70% { opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    .count { font-size: 12px; color: #b7d8ff; }
+  </style>
+</head>
+<body>
+  <h1>Zodiac Jars</h1>
+  <div class="grid" id="jarGrid"></div>
+  <div style="opacity:0.8; font-size:13px;">Chat commands: !aries ... !pisces</div>
+  <script>
+    const signs = [
+      { id: 'aries', label: 'Aries', date: 'Mar 21 - Apr 19', color: '#ff785a', icon: '♈' },
+      { id: 'taurus', label: 'Taurus', date: 'Apr 20 - May 20', color: '#66d17d', icon: '♉' },
+      { id: 'gemini', label: 'Gemini', date: 'May 21 - Jun 20', color: '#ffd166', icon: '♊' },
+      { id: 'cancer', label: 'Cancer', date: 'Jun 21 - Jul 22', color: '#7de2fc', icon: '♋' },
+      { id: 'leo', label: 'Leo', date: 'Jul 23 - Aug 22', color: '#ffb347', icon: '♌' },
+      { id: 'virgo', label: 'Virgo', date: 'Aug 23 - Sep 22', color: '#b8f1b0', icon: '♍' },
+      { id: 'libra', label: 'Libra', date: 'Sep 23 - Oct 22', color: '#f4a6ff', icon: '♎' },
+      { id: 'scorpio', label: 'Scorpio', date: 'Oct 23 - Nov 21', color: '#ff6f91', icon: '♏' },
+      { id: 'sagittarius', label: 'Sagittarius', date: 'Nov 22 - Dec 21', color: '#ffe066', icon: '♐' },
+      { id: 'capricorn', label: 'Capricorn', date: 'Dec 22 - Jan 19', color: '#c3cad9', icon: '♑' },
+      { id: 'aquarius', label: 'Aquarius', date: 'Jan 20 - Feb 18', color: '#7fd8ff', icon: '♒' },
+      { id: 'pisces', label: 'Pisces', date: 'Feb 19 - Mar 20', color: '#6fc2ff', icon: '♓' }
+    ];
+    const state = new Map();
+    const MAX = 60;
+    const grid = document.getElementById('jarGrid');
+    signs.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'jar';
+      card.dataset.jar = s.id;
+      card.innerHTML = `
+        <div class="jar-header">
+          <div>
+            <div class="jar-title">${s.icon} ${s.label}</div>
+            <div class="dates">${s.date}</div>
+          </div>
+          <div class="count" data-count="${s.id}">0</div>
+        </div>
+        <div class="jar-items" data-items="${s.id}"></div>
+      `;
+      grid.appendChild(card);
+      state.set(s.id, []);
+    });
+
+    function addStar(id, username='') {
+      const info = signs.find(s => s.id === id);
+      if (!info) return;
+      const wrap = document.querySelector(`[data-items="${id}"]`);
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.background = `radial-gradient(circle at 50% 50%, #fff9, ${info.color})`;
+      star.textContent = info.icon;
+      star.title = username || info.label;
+      wrap.appendChild(star);
+      const arr = state.get(id); arr.push(star); if (arr.length > MAX) { arr.shift()?.remove(); }
+      document.querySelector(`[data-count="${id}"]`).textContent = arr.length;
+    }
+
+    function clearJar(id) { (state.get(id)||[]).forEach(n=>n.remove()); state.set(id, []); document.querySelector(`[data-count="${id}"]`).textContent = 0; }
+
+    function handleCommand(cmd) {
+      if (cmd.command === 'add') addStar(cmd.data, cmd.username);
+      if (cmd.command === 'clear') {
+        if (cmd.data === 'all') signs.forEach(s => clearJar(s.id));
+        else clearJar(cmd.data);
+      }
+    }
+
+    window.processChatCommand = (username, msg) => {
+      const key = msg.trim().toLowerCase().replace('!', '');
+      if (signs.some(s => s.id === key)) addStar(key, username);
+    };
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'streamCommand' && e.newValue) {
+        const cmd = JSON.parse(e.newValue);
+        if (cmd.widget === 'zodiac') handleCommand(cmd);
+      }
+    });
+  </script>
+</body>
+</html>
